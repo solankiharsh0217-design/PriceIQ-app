@@ -42,8 +42,8 @@ COPY index.html ./index.html
 # Set working directory to backend
 WORKDIR /app/backend
 
-# Expose port
-EXPOSE 8000
+# Expose port (Railway uses $PORT env var)
+EXPOSE ${PORT:-8000}
 
-# Run the FastAPI server
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the FastAPI server — use $PORT from Railway, fallback to 8000 locally
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
