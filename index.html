@@ -1,0 +1,2026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PriceIQ Italia — Real Estate Pricing Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Mono:wght@400;500&family=Figtree:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg:     #0e0c0a;
+  --bg2:    #151210;
+  --bg3:    #1e1a16;
+  --bg4:    #27221c;
+  --bg5:    #312b23;
+  --border: rgba(255,240,210,0.07);
+  --border2:rgba(255,240,210,0.13);
+  --text:   #f5ede0;
+  --text2:  #a09070;
+  --text3:  #5c5040;
+  --gold:   #c9973a;
+  --gold2:  #e8c06a;
+  --green:  #4caf82;
+  --green-bg:rgba(76,175,130,0.1);
+  --red:    #e05252;
+  --red-bg: rgba(224,82,82,0.1);
+  --amber:  #d4914a;
+  --amber-bg:rgba(212,145,74,0.1);
+  --blue:   #6a9fd8;
+  --font-display:'Cormorant Garamond',serif;
+  --font-mono:'DM Mono',monospace;
+  --font-body:'Figtree',sans-serif;
+  --r:10px; --rl:16px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;scroll-behavior:smooth;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:3px;}
+
+/* LAYOUT */
+.layout{display:flex;height:100vh;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:230px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.logo-emblem{width:36px;height:36px;border:1px solid var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-flag{display:flex;width:20px;height:14px;overflow:hidden;border-radius:2px;}
+.logo-flag span{flex:1;}
+.logo-titles{display:flex;flex-direction:column;}
+.logo-main{font-family:var(--font-display);font-size:18px;font-weight:400;color:var(--text);letter-spacing:0.04em;line-height:1;}
+.logo-main em{color:var(--gold);font-style:italic;}
+.logo-sub{font-size:10px;color:var(--text3);font-family:var(--font-mono);letter-spacing:0.08em;margin-top:3px;}
+
+.s-section{padding:14px 12px 6px;}
+.s-label{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;padding:0 8px;margin-bottom:6px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s;margin-bottom:2px;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:rgba(201,151,58,0.1);color:var(--gold);}
+.nav-ico{width:16px;text-align:center;font-size:13px;}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:500;padding:1px 6px;border-radius:10px;}
+.nav-badge-g{margin-left:auto;background:rgba(76,175,130,0.15);color:var(--green);font-size:10px;padding:1px 6px;border-radius:10px;}
+
+.sidebar-bottom{margin-top:auto;padding:16px;border-top:1px solid var(--border);}
+.auto-box{background:var(--bg3);border-radius:var(--r);padding:12px;border:1px solid var(--border);}
+.auto-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.auto-title{font-size:12px;font-weight:500;color:var(--text);}
+.auto-desc{font-size:11px;color:var(--text3);}
+.toggle{position:relative;width:36px;height:20px;cursor:pointer;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.t-track{position:absolute;inset:0;background:var(--bg5);border-radius:10px;transition:background .2s;}
+.toggle input:checked+.t-track{background:var(--green);}
+.t-thumb{position:absolute;top:3px;left:3px;width:14px;height:14px;background:#fff;border-radius:50%;transition:left .2s;}
+.toggle input:checked~.t-thumb{left:19px;}
+.auto-status{font-size:11px;color:var(--text3);margin-top:6px;}
+.auto-status.on{color:var(--green);}
+
+/* TOPBAR */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;gap:16px;flex-wrap:wrap;}
+.page-title{font-family:var(--font-display);font-size:20px;font-weight:400;color:var(--text);letter-spacing:0.02em;}
+.page-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;margin-right:4px;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.fsel{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);border-radius:var(--r);padding:6px 12px;font-size:12px;font-family:var(--font-body);cursor:pointer;outline:none;}
+.scan-btn{display:flex;align-items:center;gap:8px;padding:8px 18px;border-radius:var(--r);background:var(--gold);color:#0e0c0a;border:none;cursor:pointer;font-size:13px;font-weight:500;font-family:var(--font-body);transition:opacity .15s;}
+.scan-btn:hover{opacity:.85;}
+.scan-btn:disabled{opacity:.5;cursor:not-allowed;}
+.scan-btn .sp{width:13px;height:13px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite;display:none;}
+.scan-btn.loading .sp{display:block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* LANG TOGGLE */
+.lang-toggle{display:flex;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;overflow:hidden;flex-shrink:0;}
+.lang-btn{padding:5px 10px;font-size:11px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--text3);font-family:var(--font-body);transition:all .15s;}
+.lang-btn.active{background:var(--gold);color:#0e0c0a;}
+.lang-btn:not(.active):hover{color:var(--text2);}
+
+/* PROGRESS BAR */
+.prog{position:fixed;top:0;left:0;right:0;height:2px;z-index:999;}
+.prog-bar{height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .3s;}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:22px 24px;}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:20px;}
+.mc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:16px;position:relative;overflow:hidden;transition:border-color .2s;}
+.mc:hover{border-color:var(--border2);}
+.mc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--mc-line,var(--gold));border-radius:0 0 2px 2px;}
+.mc-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.mc-val{font-size:24px;font-weight:300;font-family:var(--font-mono);color:var(--text);line-height:1;}
+.mc-delta{font-size:11px;margin-top:6px;}
+.up{color:var(--green);}
+.dn{color:var(--red);}
+.neu{color:var(--text3);}
+
+/* PANELS */
+.g2{display:grid;grid-template-columns:1fr 380px;gap:16px;margin-bottom:16px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+.g2b{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
+.pt{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;}
+.pb{padding:16px 18px;}
+
+/* REGION CARDS */
+.region-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px 18px;}
+.rcard{background:var(--bg3);border-radius:var(--r);padding:14px;border:1px solid var(--border);transition:border-color .2s;cursor:default;}
+.rcard:hover{border-color:var(--border2);}
+.rc-city{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;}
+.rc-region{font-size:10px;color:var(--text3);margin-bottom:10px;}
+.rc-price{font-family:var(--font-mono);font-size:18px;color:var(--gold);line-height:1;}
+.rc-sub{font-size:10px;color:var(--text3);margin-top:3px;}
+.rc-bar{height:3px;background:var(--bg5);border-radius:2px;margin-top:8px;overflow:hidden;}
+.rc-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold2));}
+
+/* INSIGHT */
+.ins-item{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.ins-item:last-child{border-bottom:none;}
+.ins-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.ins-text{font-size:13px;color:var(--text);line-height:1.5;}
+.ins-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.itag{font-size:10px;padding:1px 7px;border-radius:10px;font-weight:500;margin-right:6px;display:inline-block;}
+.it-high{background:rgba(224,82,82,.12);color:var(--red);}
+.it-med{background:var(--amber-bg);color:var(--amber);}
+.it-info{background:rgba(106,159,216,.1);color:var(--blue);}
+.it-ok{background:var(--green-bg);color:var(--green);}
+
+/* PROPERTIES TABLE */
+.tctrl{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.srch-wrap{flex:1;min-width:200px;position:relative;}
+.srch{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:7px 12px 7px 30px;color:var(--text);font-size:12px;font-family:var(--font-body);outline:none;transition:border-color .15s;}
+.srch::placeholder{color:var(--text3);}
+.srch:focus{border-color:var(--gold);}
+.srch-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;}
+.tabs{display:flex;gap:2px;background:var(--bg3);padding:3px;border-radius:8px;}
+.tab{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;color:var(--text3);border:none;background:transparent;font-family:var(--font-body);transition:all .15s;}
+.tab.active{background:var(--bg2);color:var(--text);border:1px solid var(--border2);}
+.tab:not(.active):hover{color:var(--text2);}
+
+.bulk-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background:rgba(201,151,58,.05);border-bottom:1px solid rgba(201,151,58,.1);}
+.bulk-info{font-size:12px;color:var(--text2);}
+.bulk-info strong{color:var(--text);}
+.bulk-acts{display:flex;gap:8px;}
+
+.ptable{width:100%;border-collapse:collapse;font-size:13px;}
+.ptable th{text-align:left;padding:10px 14px;font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);white-space:nowrap;}
+.ptable td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.ptable tr:last-child td{border-bottom:none;}
+.ptable tr:hover td{background:rgba(255,240,210,.015);}
+.pname{font-weight:500;color:var(--text);font-size:13px;}
+.pmeta{font-size:11px;color:var(--text3);margin-top:2px;}
+.ptag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;}
+.tag-a{background:rgba(255,90,95,.12);color:#ff7a7e;}
+.tag-b{background:rgba(0,90,200,.18);color:#6aaaf5;}
+.tag-both{background:rgba(201,151,58,.1);color:var(--gold);}
+.mono{font-family:var(--font-mono);}
+.pcur{font-family:var(--font-mono);color:var(--text2);font-size:13px;}
+.pmkt{font-family:var(--font-mono);color:var(--text3);font-size:13px;}
+.psug{font-family:var(--font-mono);font-size:14px;font-weight:500;color:var(--text);}
+.chup{color:var(--green);font-size:11px;font-family:var(--font-mono);}
+.chdn{color:var(--red);font-size:11px;font-family:var(--font-mono);}
+.chneu{color:var(--text3);font-size:11px;font-family:var(--font-mono);}
+.dbar{display:flex;align-items:center;gap:7px;}
+.dtrack{width:54px;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;}
+.dfill{height:100%;border-radius:2px;}
+.dscore{font-size:11px;font-family:var(--font-mono);color:var(--text2);}
+.sbadge{font-size:10px;padding:3px 8px;border-radius:10px;font-weight:500;white-space:nowrap;}
+.st-p{background:var(--amber-bg);color:var(--amber);}
+.st-a{background:var(--green-bg);color:var(--green);}
+.st-s{background:var(--bg4);color:var(--text3);}
+
+/* BUTTONS */
+.btn{padding:5px 11px;border-radius:6px;font-size:12px;font-weight:500;font-family:var(--font-body);cursor:pointer;border:none;transition:all .15s;white-space:nowrap;}
+.b-apply{background:rgba(76,175,130,.12);color:var(--green);border:1px solid rgba(76,175,130,.25);}
+.b-apply:hover{background:rgba(76,175,130,.22);}
+.b-skip{background:var(--bg3);color:var(--text3);border:1px solid var(--border);}
+.b-skip:hover{color:var(--text2);}
+.b-done{background:var(--green-bg);color:var(--green);border:1px solid rgba(76,175,130,.2);cursor:default;}
+.b-skipped{background:var(--bg4);color:var(--text3);border:1px solid var(--border);cursor:default;}
+.b-bulk-apply{background:var(--gold);color:#0e0c0a;border:none;}
+.b-bulk-apply:hover{background:var(--gold2);}
+.b-bulk-skip{background:transparent;color:var(--text3);border:1px solid var(--border2);}
+.b-bulk-skip:hover{color:var(--text2);}
+
+/* PAGINATION */
+.pager{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-top:1px solid var(--border);}
+.pager-info{font-size:11px;color:var(--text3);}
+.pager-btns{display:flex;gap:4px;}
+.pb-btn{padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:var(--font-body);transition:all .15s;}
+.pb-btn:hover{color:var(--text);background:var(--bg3);}
+.pb-btn.act{background:var(--gold);color:#0e0c0a;border-color:var(--gold);}
+.pb-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+/* MARKET ITEM */
+.mi{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);}
+.mi:last-child{border-bottom:none;}
+.mi-left{display:flex;align-items:center;gap:10px;}
+.mi-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.mia{background:rgba(255,90,95,.1);}
+.mib{background:rgba(0,90,200,.12);}
+.mi-name{font-size:13px;font-weight:500;color:var(--text);}
+.mi-loc{font-size:11px;color:var(--text3);}
+.mi-right{text-align:right;}
+.mi-price{font-size:14px;font-weight:500;font-family:var(--font-mono);color:var(--text);}
+.mi-occ{font-size:11px;color:var(--text3);}
+
+/* LOG */
+.log-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.log-row:last-child{border-bottom:none;}
+.log-time{font-family:var(--font-mono);color:var(--text3);font-size:11px;white-space:nowrap;min-width:70px;margin-top:1px;}
+.log-body{color:var(--text2);}
+.log-body strong{color:var(--text);}
+.lbadge{font-size:10px;padding:1px 7px;border-radius:10px;margin-left:6px;}
+.lb-a{background:rgba(201,151,58,.1);color:var(--gold);}
+.lb-m{background:var(--green-bg);color:var(--green);}
+
+/* SETTINGS */
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.set-row:last-child{border-bottom:none;}
+.set-lbl{color:var(--text);}
+.set-desc{font-size:11px;color:var(--text3);margin-top:2px;}
+.rng-wrap{display:flex;align-items:center;gap:10px;}
+.rng{width:110px;accent-color:var(--gold);}
+.rng-v{font-family:var(--font-mono);font-size:12px;color:var(--gold);min-width:42px;}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s;}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rl);padding:28px;width:500px;max-width:92vw;transform:translateY(8px);transition:transform .2s;}
+.overlay.open .modal{transform:translateY(0);}
+.modal-title{font-family:var(--font-display);font-size:22px;font-weight:400;color:var(--text);margin-bottom:2px;}
+.modal-sub{font-size:12px;color:var(--text3);margin-bottom:20px;}
+.modal-divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.mrow{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:13px;}
+.mlbl{color:var(--text3);}
+.mval{color:var(--text);font-family:var(--font-mono);}
+.mval.sug{color:var(--green);font-size:15px;font-weight:500;}
+.m-input{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;font-family:var(--font-mono);outline:none;width:100%;margin-top:12px;}
+.m-input:focus{border-color:var(--gold);}
+.m-input-lbl{font-size:12px;color:var(--text3);margin-top:12px;display:block;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+.m-cancel{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);padding:8px 18px;border-radius:8px;font-size:13px;cursor:pointer;font-family:var(--font-body);}
+.m-confirm{background:var(--gold);color:#0e0c0a;border:none;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);}
+
+/* NOTIF */
+.notif{position:fixed;bottom:24px;right:24px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:12px 18px;font-size:13px;color:var(--text);z-index:300;display:flex;align-items:center;gap:10px;transform:translateY(16px);opacity:0;transition:all .3s;pointer-events:none;}
+.notif.show{transform:translateY(0);opacity:1;}
+.n-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+
+/* SEASON BADGES */
+.season{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;}
+.s-alta{background:rgba(201,151,58,.15);color:var(--gold);}
+.s-media{background:rgba(106,159,216,.1);color:var(--blue);}
+.s-bassa{background:var(--bg4);color:var(--text3);}
+
+/* CHART */
+.cw{position:relative;width:100%;}
+
+/* AI ANALYSIS BOX */
+.ai-box{background:var(--bg3);border:1px solid rgba(201,151,58,.15);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;}
+.ai-box-title{font-size:11px;font-weight:500;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.ai-tag{width:18px;height:18px;border-radius:4px;background:rgba(201,151,58,.15);display:inline-flex;align-items:center;justify-content:center;font-size:11px;}
+.ai-text{font-size:13px;color:var(--text2);line-height:1.6;}
+
+/* ADD PROPERTY FORM */
+.add-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px;}
+.add-form .full{grid-column:1/-1;}
+.form-group{display:flex;flex-direction:column;gap:4px;}
+.form-group label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.form-group input,.form-group select{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;font-family:var(--font-body);outline:none;}
+.form-group input:focus,.form-group select:focus{border-color:var(--gold);}
+.form-group select{cursor:pointer;}
+.add-btn{background:var(--gold);color:#0e0c0a;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);justify-self:start;}
+.add-btn:hover{background:var(--gold2);}
+
+/* SCRAPED DATA CARD */
+.scrape-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;}
+.scrape-card:hover{border-color:var(--border2);}
+.sc-name{font-size:13px;color:var(--text);font-weight:500;}
+.sc-meta{font-size:11px;color:var(--text3);margin-top:2px;}
+.sc-price{font-family:var(--font-mono);font-size:16px;color:var(--gold);font-weight:500;}
+.sc-src{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;}
+.src-airbnb{background:rgba(255,90,95,.12);color:#ff7a7e;}
+.src-booking{background:rgba(0,90,200,.18);color:#6aaaf5;}
+.sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;padding:16px 18px;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px;}
+.empty-state .em-ico{font-size:32px;margin-bottom:12px;opacity:.5;}
+.empty-state .em-action{color:var(--gold);cursor:pointer;text-decoration:underline;margin-top:8px;display:inline-block;}
+
+/* SCAN HISTORY */
+.scan-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:border-color .2s;}
+.scan-card:hover{border-color:var(--gold);}
+.scan-card.active{border-color:var(--gold);background:rgba(201,151,58,.05);}
+.scan-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.scan-date{font-size:14px;font-weight:500;color:var(--text);}
+.scan-status{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500;}
+.scan-st-ok{background:var(--green-bg);color:var(--green);}
+.scan-st-fail{background:var(--red-bg);color:var(--red);}
+.scan-st-run{background:var(--amber-bg);color:var(--amber);}
+.scan-stats{display:flex;gap:16px;font-size:12px;color:var(--text3);}
+.scan-stats span{display:flex;align-items:center;gap:4px;}
+.scan-stats .num{color:var(--text);font-family:var(--font-mono);}
+.scan-cities{font-size:11px;color:var(--text3);margin-top:6px;}
+.scan-list{display:flex;flex-direction:column;gap:8px;}
+.scan-detail-grid{display:grid;grid-template-columns:300px 1fr;gap:16px;}
+@media(max-width:900px){.scan-detail-grid{grid-template-columns:1fr;}}
+
+/* CITY PICKER */
+.city-picker{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:16px 18px;}
+.city-pick{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;transition:all .15s;}
+.city-pick:hover{border-color:var(--border2);}
+.city-pick.selected{border-color:var(--gold);background:rgba(201,151,58,.08);}
+.city-pick input[type=checkbox]{accent-color:var(--gold);width:14px;height:14px;}
+.city-pick-name{font-size:13px;color:var(--text);font-weight:500;}
+.city-pick-region{font-size:11px;color:var(--text3);}
+
+/* RESPONSIVE */
+@media(max-width:1100px){.g2{grid-template-columns:1fr;}.metrics{grid-template-columns:repeat(3,1fr);}.region-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:800px){.sidebar{display:none;}.metrics{grid-template-columns:repeat(2,1fr);}.add-form{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="prog"><div class="prog-bar" id="pgBar"></div></div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-emblem">
+      <div class="logo-flag">
+        <span style="background:#009246;"></span>
+        <span style="background:#fff;"></span>
+        <span style="background:#ce2b37;"></span>
+      </div>
+    </div>
+    <div class="logo-titles">
+      <div class="logo-main">Price<em>IQ</em></div>
+      <div class="logo-sub">ITALIA · PRICING ENGINE</div>
+    </div>
+  </div>
+
+  <div class="s-section">
+    <div class="s-label" id="navLabel">Navigation</div>
+    <div class="nav-item active" onclick="gotoPage('dashboard')"><span class="nav-ico">◈</span> <span class="nav-text" data-key="nav_dashboard">Dashboard</span></div>
+    <div class="nav-item" onclick="gotoPage('properties')"><span class="nav-ico">⌂</span> <span class="nav-text" data-key="nav_properties">Properties</span> <span class="nav-badge" id="pendBadge">19</span></div>
+    <div class="nav-item" onclick="gotoPage('market')"><span class="nav-ico">◉</span> <span class="nav-text" data-key="nav_market">Market</span></div>
+    <div class="nav-item" onclick="gotoPage('analysis')"><span class="nav-ico">◎</span> <span class="nav-text" data-key="nav_analysis">AI Analysis</span></div>
+    <div class="nav-item" onclick="gotoPage('log')"><span class="nav-ico">≡</span> <span class="nav-text" data-key="nav_log">History</span></div>
+    <div class="nav-item" onclick="gotoPage('scanHistory')"><span class="nav-ico">⟳</span> <span class="nav-text" data-key="nav_scan_history">Scan History</span></div>
+  </div>
+
+  <div class="s-section">
+    <div class="s-label" id="configLabel">Configuration</div>
+    <div class="nav-item" onclick="gotoPage('settings')"><span class="nav-ico">⚙</span> <span class="nav-text" data-key="nav_settings">Settings</span></div>
+    <div class="nav-item" onclick="gotoPage('seasons')"><span class="nav-ico">◇</span> <span class="nav-text" data-key="nav_seasons">Seasonality</span></div>
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="auto-box">
+      <div class="auto-row">
+        <div>
+          <div class="auto-title" id="autoTitle">Auto-suggestion</div>
+          <div class="auto-desc" id="autoDesc" style="margin-top:2px;">Update prices automatically</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="autoTgl" onchange="toggleAuto(this)">
+          <div class="t-track"></div>
+          <div class="t-thumb"></div>
+        </label>
+      </div>
+      <div class="auto-status" id="autoStat">● Manual approval</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pgTitle">Overview</div>
+      <div class="page-sub"><span class="live-dot"></span><span id="lastScanLabel">Last scan:</span> <span id="lastScan">3 minutes ago</span></div>
+    </div>
+    <div class="topbar-right">
+      <div class="lang-toggle">
+        <button class="lang-btn active" id="langEN" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" id="langIT" onclick="setLang('it')">IT</button>
+      </div>
+      <button class="scan-btn" id="scanBtn" onclick="openScanModal()">
+        <div class="sp"></div>
+        <span id="scanLbl">▶ Analyze Market</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="content" id="content"></div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Apply Suggested Price</div>
+    <div class="modal-sub" id="modalSub">Review and confirm before updating the listing</div>
+    <hr class="modal-divider">
+    <div class="mrow"><span class="mlbl" id="mlblProp">Property</span><span class="mval" id="mProp">—</span></div>
+    <div class="mrow"><span class="mlbl" id="mlblCity">City</span><span class="mval" id="mCity">—</span></div>
+    <div class="mrow"><span class="mlbl" id="mlblCur">Current price</span><span class="mval" id="mCur">—</span></div>
+    <div class="mrow"><span class="mlbl" id="mlblMkt">Market average</span><span class="mval" id="mMkt">—</span></div>
+    <div class="mrow"><span class="mlbl" id="mlblSug">AI suggested price</span><span class="mval sug" id="mSug">—</span></div>
+    <hr class="modal-divider">
+    <label class="m-input-lbl" id="mOverLbl">Custom price (optional)</label>
+    <input class="m-input" type="number" id="mOver" placeholder="e.g. 185">
+    <div class="modal-footer">
+      <button class="m-cancel" onclick="closeModal()" id="mCancelBtn">Cancel</button>
+      <button class="m-confirm" onclick="confirmApply()" id="mConfirmBtn">Apply Price</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCAN CONFIG MODAL -->
+<div class="overlay" id="scanOverlay">
+  <div class="modal" style="width:560px;">
+    <div class="modal-title" id="scanModalTitle">Configure Market Scan</div>
+    <div class="modal-sub" id="scanModalSub">Select cities and platforms to scan</div>
+    <hr class="modal-divider">
+    <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;" id="scanPlatLabel">Platforms</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <div class="city-pick selected" onclick="toggleScanPlat('airbnb',this)" style="flex:1;justify-content:center;">
+        <input type="checkbox" checked data-plat="airbnb" onclick="event.stopPropagation();" onchange="toggleScanPlat('airbnb',this.parentElement)">
+        <div class="city-pick-name"><span class="sc-src src-airbnb">Airbnb</span></div>
+      </div>
+      <div class="city-pick selected" onclick="toggleScanPlat('booking',this)" style="flex:1;justify-content:center;">
+        <input type="checkbox" checked data-plat="booking" onclick="event.stopPropagation();" onchange="toggleScanPlat('booking',this.parentElement)">
+        <div class="city-pick-name"><span class="sc-src src-booking">Booking.com</span></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;" id="scanCityLabel">Cities</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn b-apply" onclick="scanSelectAll(true)" id="scanSelAll" style="font-size:11px;padding:3px 8px;">Select all</button>
+        <button class="btn b-skip" onclick="scanSelectAll(false)" id="scanSelNone" style="font-size:11px;padding:3px 8px;">Deselect all</button>
+      </div>
+    </div>
+    <div class="city-picker" id="cityPicker"></div>
+    <hr class="modal-divider">
+    <div class="modal-footer">
+      <button class="m-cancel" onclick="closeScanModal()" id="scanCancelBtn">Cancel</button>
+      <button class="m-confirm" onclick="startScanWithCities()" id="scanStartBtn">Start Scan</button>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"><div class="n-dot"></div><span id="notifTxt">Price updated</span></div>
+
+<script>
+// ===================== I18N TRANSLATIONS =====================
+const LANG = {
+  en: {
+    // Navigation
+    nav_label: 'Navigation',
+    config_label: 'Configuration',
+    nav_dashboard: 'Dashboard',
+    nav_properties: 'Properties',
+    nav_market: 'Market',
+    nav_analysis: 'AI Analysis',
+    nav_log: 'History',
+    nav_settings: 'Settings',
+    nav_seasons: 'Seasonality',
+
+    // Page titles
+    title_dashboard: 'Overview',
+    title_properties: 'My Properties',
+    title_market: 'Market Data',
+    title_analysis: 'AI Analysis',
+    title_log: 'Update History',
+    title_settings: 'Settings',
+    title_seasons: 'Seasonality',
+
+    // Sidebar
+    auto_title: 'Auto-suggestion',
+    auto_desc: 'Update prices automatically',
+    auto_on: '● Auto-update ACTIVE',
+    auto_off: '● Manual approval',
+
+    // Topbar
+    last_scan: 'Last scan:',
+    all_cities: 'All cities',
+    all_platforms: 'All platforms',
+    both_platforms: 'Both',
+    scan_btn: '▶ Analyze Market',
+    scanning: 'Scanning...',
+
+    // Dashboard metrics
+    italian_market_avg: 'Italian market average',
+    your_avg_price: 'Your average price',
+    pending_suggestions: 'Pending suggestions',
+    est_nightly_gain: 'Est. nightly gain',
+    applied_total: 'Applied / Total',
+    from_real_listings: 'From {n} real listings',
+    run_scan_for_data: 'Run scan for real data',
+    below_market: '▼ {n}% below market',
+    of_total_props: 'of {n} total properties',
+    if_all_applied: '▲ if all applied',
+    pct_updated: '▲ {n}% updated',
+
+    // Dashboard panels
+    price_trend_30d: 'Price trend — 30 days',
+    your_prices: 'Your prices',
+    market_avg: 'Market average',
+    market_by_city: 'Market by city',
+    high_season: 'High season',
+    mid_season: 'Mid season',
+    low_season: 'Low season',
+    occupancy: 'occupancy',
+    ai_insights: 'AI Insights',
+    no_market_data: 'No market data. Run a scan to collect real data from Airbnb and Booking.com.',
+    insights_after_scan: 'AI insights will be generated after the first market scan.',
+    avg_prices_by_city: 'Average prices by city',
+
+    // Properties
+    add_property: '+ Add',
+    add_new_property: 'Add new property',
+    close: '✕ Close',
+    property_name: 'Property name',
+    property_type: 'Type',
+    city: 'City',
+    region: 'Region',
+    platform: 'Platform',
+    current_price_label: 'Current price (€/night)',
+    add_property_btn: '+ Add Property',
+    search_placeholder: 'Search properties, cities, regions...',
+    tab_all: 'All',
+    tab_pending: 'Pending',
+    tab_applied: 'Applied',
+    tab_skipped: 'Skipped',
+    suggestions_pending: '{n} suggestions pending approval',
+    skip_all: 'Skip all',
+    apply_all_n: 'Apply all {n} suggestions',
+    th_property: 'Property',
+    th_city: 'City',
+    th_platform: 'Platform',
+    th_current: 'Current price',
+    th_market: 'Market avg',
+    th_suggested: 'AI Suggested',
+    th_change: 'Change',
+    th_demand: 'Demand',
+    th_status: 'Status',
+    th_action: 'Action',
+    status_pending: 'Pending',
+    status_applied: 'Applied',
+    status_skipped: 'Skipped',
+    btn_apply: 'Apply',
+    btn_skip: 'Skip',
+    btn_done: '✓ Done',
+    btn_skipped: 'Skipped',
+    unchanged: 'Unchanged',
+    showing: 'Showing {from}–{to} of {total} properties',
+
+    // Market
+    airbnb_avg: 'Airbnb Italy Average',
+    booking_avg: 'Booking.com Average',
+    cities_analyzed: 'Cities analyzed',
+    total_listings: 'Total listings',
+    listings_collected: '{n} listings collected',
+    no_data_run_scan: 'No data — run scan',
+    none: 'None',
+    real_scraped_data: 'Real scraped data',
+    click_analyze: 'Click "Analyze Market"',
+    no_market_available: 'No market data available.',
+    click_analyze_topbar: 'Click <strong>"Analyze Market"</strong> in the top bar to start the first scan.',
+    scraper_collects: 'The scraper will collect real data from Airbnb and Booking.com for 10 Italian cities.',
+    collected_airbnb: 'Collected data — Airbnb ({n} listings)',
+    collected_booking: 'Collected data — Booking.com ({n} listings)',
+    no_airbnb_data: 'No Airbnb data',
+    no_booking_data: 'No Booking data',
+    more_listings: '+{n} more listings',
+    city_summary_real: 'City summary (real data)',
+    per_night: '/night',
+    season_label: '{s} season',
+    demand_by_day: 'Demand by day of week',
+    avg_by_region_season: 'Average prices by region and season',
+
+    // Analysis
+    ai_summary_title: 'AI Analysis Summary — Italian Market',
+    ai_summary_text: 'Comparative analysis of <strong style="color:var(--text);">{listings} listings</strong> on Airbnb and Booking.com across <strong style="color:var(--text);">{cityCount} cities</strong> ({cityNames}) shows your portfolio is on average <strong style="color:var(--red);">undervalued by {gap}%</strong> vs competitors. Applying all {pending} suggestions could generate an estimated increase of <strong style="color:var(--green);">€{uplift}/night</strong>.',
+    top_price_opportunities: 'Top price opportunities',
+    th_current_short: 'Current',
+    th_suggested_short: 'Suggested',
+    th_gain_night: 'Gain/night',
+    suggestion_dist_city: 'Suggestion distribution by city',
+    detailed_insights: 'Detailed insights',
+
+    // Log
+    price_update_history: 'Price update history',
+    recent_events: '{n} recent events',
+    type_auto: 'Auto',
+    type_manual: 'Manual',
+    type_skipped: 'Skipped',
+
+    // Settings
+    pricing_rules: 'Pricing rules',
+    price_floor: 'Price floor',
+    price_floor_desc: 'Never suggest below this price',
+    price_ceiling: 'Price ceiling',
+    price_ceiling_desc: 'Never suggest above this price',
+    market_undercut: 'Market undercut',
+    market_undercut_desc: 'Suggest X% below competitor average',
+    weekend_premium: 'Weekend premium',
+    weekend_premium_desc: 'Add % to prices Fri–Sun',
+    scan_frequency: 'Scan frequency',
+    scan_frequency_desc: 'How often to update market data',
+    auto_update_mode: 'Auto-update mode',
+    auto_update_desc: 'Apply suggestions without approval',
+    every_6h: 'Every 6 hours',
+    every_12h: 'Every 12 hours',
+    daily: 'Daily',
+
+    // Seasons
+    high_season_label: 'High Season',
+    spring_label: 'Spring',
+    autumn_label: 'Autumn',
+    low_season_label: 'Low Season',
+    avg_by_season_area: 'Average prices by season and area',
+
+    // Modal
+    modal_title: 'Apply Suggested Price',
+    modal_sub: 'Review and confirm before updating the listing',
+    modal_property: 'Property',
+    modal_city: 'City',
+    modal_current: 'Current price',
+    modal_market: 'Market average',
+    modal_suggested: 'AI suggested price',
+    modal_custom: 'Custom price (optional)',
+    modal_custom_ph: 'e.g. 185',
+    modal_cancel: 'Cancel',
+    modal_apply: 'Apply Price',
+
+    // Notifications
+    notif_updated: '{name} updated to €{price}/night',
+    notif_skipped: 'Skipped: {name}',
+    notif_bulk_applied: 'Applied {n} price suggestions',
+    notif_auto_on: 'Auto-update activated',
+    notif_auto_off: 'Manual approval mode activated',
+    notif_scan_complete: 'Scan complete — {n} listings analyzed',
+    notif_connection_error: 'Server connection error',
+    notif_enter_name: 'Enter the property name',
+    notif_enter_price: 'Enter the current price',
+    notif_added: 'Property "{name}" added successfully',
+
+    // Chart labels
+    chart_your_prices: 'Your prices',
+    chart_market: 'Market',
+    chart_market_avg: 'Market average',
+    chart_your_price: 'Your price',
+    chart_coastal: 'Coastal/Islands',
+    chart_art_cities: 'Art Cities',
+    chart_days: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    chart_months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+
+    // Scan History
+    nav_scan_history: 'Scan History',
+    title_scan_history: 'Scan History',
+    scan_history_desc: 'Browse past market scans and their data',
+    scan_completed: 'Completed',
+    scan_failed: 'Failed',
+    scan_running: 'Running',
+    scan_cities_label: 'Cities:',
+    scan_airbnb_label: 'Airbnb',
+    scan_booking_label: 'Booking',
+    scan_total_label: 'Total',
+    scan_suggestions_label: 'Suggestions',
+    scan_no_history: 'No scan history yet. Run your first scan to see results here.',
+    scan_view_data: 'View scan data',
+    scan_detail_title: 'Scan #{id} — {date}',
+    scan_back: '← Back to all scans',
+    scan_select_cities: 'Select Cities to Scan',
+    scan_select_sub: 'Choose which cities to include in this market scan',
+    scan_select_all: 'Select all',
+    scan_deselect_all: 'Deselect all',
+    scan_start: 'Start Scan',
+    scan_no_cities: 'Select at least one city',
+    scan_city_markets_snap: 'City markets at scan time',
+    scan_insights_snap: 'AI insights at scan time',
+    scan_comps_title: 'Scraped listings ({n})',
+
+    // Time
+    time_now: 'Now',
+    time_min_ago: '{n} min ago',
+    time_yesterday: 'Yesterday',
+  },
+  it: {
+    nav_label: 'Navigazione',
+    config_label: 'Configurazione',
+    nav_dashboard: 'Dashboard',
+    nav_properties: 'Proprietà',
+    nav_market: 'Mercato',
+    nav_analysis: 'Analisi AI',
+    nav_log: 'Storico',
+    nav_settings: 'Impostazioni',
+    nav_seasons: 'Stagionalità',
+
+    title_dashboard: 'Panoramica',
+    title_properties: 'Le Mie Proprietà',
+    title_market: 'Dati di Mercato',
+    title_analysis: 'Analisi AI',
+    title_log: 'Storico Aggiornamenti',
+    title_settings: 'Impostazioni',
+    title_seasons: 'Stagionalità',
+
+    auto_title: 'Auto-suggerimento',
+    auto_desc: 'Aggiorna prezzi in automatico',
+    auto_on: '● Auto-aggiornamento ATTIVO',
+    auto_off: '● Approvazione manuale',
+
+    last_scan: 'Ultima scansione:',
+    all_cities: 'Tutte le città',
+    all_platforms: 'Tutte le piattaforme',
+    both_platforms: 'Entrambe',
+    scan_btn: '▶ Analizza Mercato',
+    scanning: 'Scansione...',
+
+    italian_market_avg: 'Media mercato italiano',
+    your_avg_price: 'Il tuo prezzo medio',
+    pending_suggestions: 'Suggerimenti in attesa',
+    est_nightly_gain: 'Guadagno est. nightly',
+    applied_total: 'Applicati / Totale',
+    from_real_listings: 'Da {n} annunci reali',
+    run_scan_for_data: 'Avvia scansione per dati reali',
+    below_market: '▼ {n}% sotto il mercato',
+    of_total_props: 'su {n} proprietà totali',
+    if_all_applied: '▲ se tutti applicati',
+    pct_updated: '▲ {n}% aggiornati',
+
+    price_trend_30d: 'Andamento prezzi — 30 giorni',
+    your_prices: 'I tuoi prezzi',
+    market_avg: 'Media mercato',
+    market_by_city: 'Mercato per città',
+    high_season: 'Alta stagione',
+    mid_season: 'Media stagione',
+    low_season: 'Bassa stagione',
+    occupancy: 'occupazione',
+    ai_insights: 'Insights AI',
+    no_market_data: 'Nessun dato di mercato. Avvia una scansione per raccogliere dati reali da Airbnb e Booking.com.',
+    insights_after_scan: 'Gli insights AI verranno generati dopo la prima scansione di mercato.',
+    avg_prices_by_city: 'Prezzi medi per città',
+
+    add_property: '+ Aggiungi',
+    add_new_property: 'Aggiungi nuova proprietà',
+    close: '✕ Chiudi',
+    property_name: 'Nome proprietà',
+    property_type: 'Tipologia',
+    city: 'Città',
+    region: 'Regione',
+    platform: 'Piattaforma',
+    current_price_label: 'Prezzo attuale (€/notte)',
+    add_property_btn: '+ Aggiungi Proprietà',
+    search_placeholder: 'Cerca proprietà, città, regione...',
+    tab_all: 'Tutte',
+    tab_pending: 'In attesa',
+    tab_applied: 'Applicate',
+    tab_skipped: 'Saltate',
+    suggestions_pending: '{n} suggerimenti in attesa di approvazione',
+    skip_all: 'Salta tutti',
+    apply_all_n: 'Applica tutti i {n} suggerimenti',
+    th_property: 'Proprietà',
+    th_city: 'Città',
+    th_platform: 'Piattaforma',
+    th_current: 'Prezzo attuale',
+    th_market: 'Media mercato',
+    th_suggested: 'Suggerito AI',
+    th_change: 'Variazione',
+    th_demand: 'Domanda',
+    th_status: 'Stato',
+    th_action: 'Azione',
+    status_pending: 'In attesa',
+    status_applied: 'Applicato',
+    status_skipped: 'Saltato',
+    btn_apply: 'Applica',
+    btn_skip: 'Salta',
+    btn_done: '✓ Fatto',
+    btn_skipped: 'Saltato',
+    unchanged: 'Invariato',
+    showing: 'Mostrando {from}–{to} di {total} proprietà',
+
+    airbnb_avg: 'Media Airbnb Italia',
+    booking_avg: 'Media Booking.com',
+    cities_analyzed: 'Città analizzate',
+    total_listings: 'Annunci totali',
+    listings_collected: '{n} annunci raccolti',
+    no_data_run_scan: 'Nessun dato — avvia scansione',
+    none: 'Nessuna',
+    real_scraped_data: 'Dati reali da scraping',
+    click_analyze: 'Clicca "Analizza Mercato"',
+    no_market_available: 'Nessun dato di mercato disponibile.',
+    click_analyze_topbar: 'Clicca <strong>"Analizza Mercato"</strong> nella barra superiore per avviare la prima scansione.',
+    scraper_collects: 'Lo scraper raccoglierà dati reali da Airbnb e Booking.com per le 10 città italiane.',
+    collected_airbnb: 'Dati raccolti — Airbnb ({n} annunci)',
+    collected_booking: 'Dati raccolti — Booking.com ({n} annunci)',
+    no_airbnb_data: 'Nessun dato Airbnb',
+    no_booking_data: 'Nessun dato Booking',
+    more_listings: '+{n} altri annunci',
+    city_summary_real: 'Riepilogo per città (dati reali)',
+    per_night: '/notte',
+    season_label: '{s} stagione',
+    demand_by_day: 'Domanda per giorno della settimana',
+    avg_by_region_season: 'Prezzi medi per regione e stagione',
+
+    ai_summary_title: 'Riepilogo Analisi AI — Mercato Italiano',
+    ai_summary_text: 'L\'analisi comparativa di <strong style="color:var(--text);">{listings} annunci</strong> su Airbnb e Booking.com in <strong style="color:var(--text);">{cityCount} città</strong> ({cityNames}) mostra che il tuo portafoglio è mediamente <strong style="color:var(--red);">sottovalutato del {gap}%</strong> rispetto ai competitor. Applicare tutti i {pending} suggerimenti potrebbe generare un incremento stimato di <strong style="color:var(--green);">€{uplift}/notte</strong>.',
+    top_price_opportunities: 'Top opportunità di prezzo',
+    th_current_short: 'Attuale',
+    th_suggested_short: 'Suggerito',
+    th_gain_night: 'Guadagno/notte',
+    suggestion_dist_city: 'Distribuzione suggerimenti per città',
+    detailed_insights: 'Insights dettagliati',
+
+    price_update_history: 'Storico aggiornamenti prezzi',
+    recent_events: '{n} eventi recenti',
+    type_auto: 'Auto',
+    type_manual: 'Manuale',
+    type_skipped: 'Saltato',
+
+    pricing_rules: 'Regole di pricing',
+    price_floor: 'Prezzo minimo (floor)',
+    price_floor_desc: 'Non suggerire mai sotto questo prezzo',
+    price_ceiling: 'Prezzo massimo (ceiling)',
+    price_ceiling_desc: 'Non suggerire mai sopra questo prezzo',
+    market_undercut: 'Sconto rispetto al mercato',
+    market_undercut_desc: 'Suggerisci X% sotto la media competitor',
+    weekend_premium: 'Supplemento weekend',
+    weekend_premium_desc: 'Aggiungi % ai prezzi Ven–Dom',
+    scan_frequency: 'Frequenza scansione',
+    scan_frequency_desc: 'Ogni quanto aggiornare i dati di mercato',
+    auto_update_mode: 'Modalità auto-aggiornamento',
+    auto_update_desc: 'Applica suggerimenti senza approvazione',
+    every_6h: 'Ogni 6 ore',
+    every_12h: 'Ogni 12 ore',
+    daily: 'Giornaliera',
+
+    high_season_label: 'Alta Stagione',
+    spring_label: 'Primavera',
+    autumn_label: 'Autunno',
+    low_season_label: 'Bassa Stagione',
+    avg_by_season_area: 'Prezzi medi per stagione e area',
+
+    modal_title: 'Applica Prezzo Suggerito',
+    modal_sub: 'Verifica e conferma prima di aggiornare il listino',
+    modal_property: 'Proprietà',
+    modal_city: 'Città',
+    modal_current: 'Prezzo attuale',
+    modal_market: 'Media mercato',
+    modal_suggested: 'Prezzo AI suggerito',
+    modal_custom: 'Prezzo personalizzato (opzionale)',
+    modal_custom_ph: 'es. 185',
+    modal_cancel: 'Annulla',
+    modal_apply: 'Applica Prezzo',
+
+    notif_updated: '{name} aggiornato a €{price}/notte',
+    notif_skipped: 'Saltato: {name}',
+    notif_bulk_applied: 'Applicati {n} suggerimenti di prezzo',
+    notif_auto_on: 'Auto-aggiornamento attivato',
+    notif_auto_off: 'Modalità approvazione manuale attivata',
+    notif_scan_complete: 'Scansione completata — {n} annunci analizzati',
+    notif_connection_error: 'Errore di connessione al server',
+    notif_enter_name: 'Inserisci il nome della proprietà',
+    notif_enter_price: 'Inserisci il prezzo attuale',
+    notif_added: 'Proprietà "{name}" aggiunta con successo',
+
+    chart_your_prices: 'I tuoi prezzi',
+    chart_market: 'Mercato',
+    chart_market_avg: 'Media mercato',
+    chart_your_price: 'Il tuo prezzo',
+    chart_coastal: 'Costiera/Isole',
+    chart_art_cities: 'Città d\'Arte',
+    chart_days: ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'],
+    chart_months: ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'],
+
+    nav_scan_history: 'Cronologia Scansioni',
+    title_scan_history: 'Cronologia Scansioni',
+    scan_history_desc: 'Sfoglia le scansioni di mercato passate e i loro dati',
+    scan_completed: 'Completato',
+    scan_failed: 'Fallito',
+    scan_running: 'In corso',
+    scan_cities_label: 'Città:',
+    scan_airbnb_label: 'Airbnb',
+    scan_booking_label: 'Booking',
+    scan_total_label: 'Totale',
+    scan_suggestions_label: 'Suggerimenti',
+    scan_no_history: 'Nessuna cronologia scansioni. Esegui la prima scansione per vedere i risultati qui.',
+    scan_view_data: 'Visualizza dati scansione',
+    scan_detail_title: 'Scansione #{id} — {date}',
+    scan_back: '← Torna a tutte le scansioni',
+    scan_select_cities: 'Seleziona Città da Scansionare',
+    scan_select_sub: 'Scegli quali città includere in questa scansione di mercato',
+    scan_select_all: 'Seleziona tutte',
+    scan_deselect_all: 'Deseleziona tutte',
+    scan_start: 'Avvia Scansione',
+    scan_no_cities: 'Seleziona almeno una città',
+    scan_city_markets_snap: 'Mercati città al momento della scansione',
+    scan_insights_snap: 'Insights AI al momento della scansione',
+    scan_comps_title: 'Annunci raccolti ({n})',
+
+    time_now: 'Adesso',
+    time_min_ago: '{n} min fa',
+    time_yesterday: 'Ieri',
+  }
+};
+
+let lang = 'en';
+
+function t(key, params) {
+  let str = LANG[lang][key] || LANG['en'][key] || key;
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      str = str.replace(new RegExp('\\{' + k + '\\}', 'g'), v);
+    }
+  }
+  return str;
+}
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('priceiq_lang', l);
+  document.getElementById('langEN').className = l === 'en' ? 'lang-btn active' : 'lang-btn';
+  document.getElementById('langIT').className = l === 'it' ? 'lang-btn active' : 'lang-btn';
+  document.documentElement.lang = l === 'it' ? 'it' : 'en';
+  updateStaticUI();
+  gotoPage(curPage);
+}
+
+function updateStaticUI() {
+  document.getElementById('navLabel').textContent = t('nav_label');
+  document.getElementById('configLabel').textContent = t('config_label');
+  document.querySelectorAll('.nav-text').forEach(el => {
+    const key = el.dataset.key;
+    if (key) el.textContent = t(key);
+  });
+  document.getElementById('autoTitle').textContent = t('auto_title');
+  document.getElementById('autoDesc').textContent = t('auto_desc');
+  const st = document.getElementById('autoStat');
+  st.textContent = autoMode ? t('auto_on') : t('auto_off');
+  document.getElementById('lastScanLabel').textContent = t('last_scan');
+  document.getElementById('scanLbl').textContent = t('scan_btn');
+  document.getElementById('modalTitle').textContent = t('modal_title');
+  document.getElementById('modalSub').textContent = t('modal_sub');
+  document.getElementById('mlblProp').textContent = t('modal_property');
+  document.getElementById('mlblCity').textContent = t('modal_city');
+  document.getElementById('mlblCur').textContent = t('modal_current');
+  document.getElementById('mlblMkt').textContent = t('modal_market');
+  document.getElementById('mlblSug').textContent = t('modal_suggested');
+  document.getElementById('mOverLbl').textContent = t('modal_custom');
+  document.getElementById('mOver').placeholder = t('modal_custom_ph');
+  document.getElementById('mCancelBtn').textContent = t('modal_cancel');
+  document.getElementById('mConfirmBtn').textContent = t('modal_apply');
+  document.getElementById('scanModalTitle').textContent = t('scan_select_cities');
+  document.getElementById('scanModalSub').textContent = t('scan_select_sub');
+  const platLabel = document.getElementById('scanPlatLabel');
+  if (platLabel) platLabel.textContent = lang==='en'?'Platforms':'Piattaforme';
+  const cityLabel = document.getElementById('scanCityLabel');
+  if (cityLabel) cityLabel.textContent = lang==='en'?'Cities':'Città';
+  document.getElementById('scanSelAll').textContent = t('scan_select_all');
+  document.getElementById('scanSelNone').textContent = t('scan_deselect_all');
+  document.getElementById('scanCancelBtn').textContent = t('modal_cancel');
+  document.getElementById('scanStartBtn').textContent = t('scan_start');
+  document.title = 'PriceIQ Italia — ' + (lang === 'en' ? 'Real Estate Pricing Engine' : 'Motore di Pricing Immobiliare');
+}
+
+// ===================== API CONFIG =====================
+const API = window.location.origin + '/api';
+
+// ===================== DATA (loaded from API) =====================
+let PROPS = [];
+let MARKET_COMPS = [];
+let CITY_MARKETS = [];
+let INSIGHTS_DATA = [];
+let LOG_DATA = [];
+let SCANS_DATA = [];
+let viewingScanId = null; // null = latest scan, number = specific historical scan
+
+// ===================== API HELPERS =====================
+async function api(endpoint, opts = {}) {
+  const url = API + endpoint;
+  const config = { headers: { 'Content-Type': 'application/json' }, ...opts };
+  if (config.body && typeof config.body === 'object') config.body = JSON.stringify(config.body);
+  try {
+    const res = await fetch(url, config);
+    if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
+    return await res.json();
+  } catch (e) {
+    console.error(`API error [${endpoint}]:`, e);
+    showNotif(t('notif_connection_error'));
+    return null;
+  }
+}
+
+async function loadAllData() {
+  let propsRes, marketRes, citiesRes, insightsRes, logRes, settingsRes, scansRes;
+  try {
+    [propsRes, marketRes, citiesRes, insightsRes, logRes, settingsRes, scansRes] = await Promise.all([
+      api('/properties'),
+      api('/market'),
+      api('/cities'),
+      api('/insights'),
+      api('/log'),
+      api('/settings'),
+      api('/scans'),
+    ]);
+  } catch(e) {
+    console.error('Failed to load data:', e);
+    return;
+  }
+
+  if (propsRes?.properties) {
+    PROPS = propsRes.properties.map(p => ({
+      id: p.id, name: p.name, type: p.type || '', city: p.city, region: p.region,
+      platform: p.platform, cur: p.current_price, mkt: p.market_price,
+      sug: p.suggested_price, demand: p.demand_score, status: p.status,
+      reasoning: p.ai_reasoning || '',
+    }));
+  }
+  if (marketRes?.comps) {
+    MARKET_COMPS = marketRes.comps.map(c => ({
+      name: c.name, city: c.city, platform: c.platform,
+      price: c.price, occ: c.occupancy || '', rating: c.rating || 0,
+    }));
+  }
+  if (citiesRes?.cities) {
+    CITY_MARKETS = citiesRes.cities.map(c => ({
+      city: c.city, region: c.region, avgPrice: c.avg_price,
+      occ: c.occupancy, trend: c.trend, season: c.season,
+    }));
+  }
+  if (insightsRes?.insights) {
+    INSIGHTS_DATA = insightsRes.insights.map(i => ({
+      color: i.color, tag: i.tag, text: i.text, sub: i.sub,
+    }));
+  }
+  if (logRes?.log) {
+    LOG_DATA = logRes.log.map(l => ({
+      time: _formatTime(l.created_at), prop: l.property_name,
+      action: l.action, from: l.price_from, to: l.price_to, type: l.log_type,
+    }));
+  }
+  if (settingsRes?.settings) {
+    autoMode = settingsRes.settings.auto_mode || false;
+    const tgl = document.getElementById('autoTgl');
+    if (tgl) tgl.checked = autoMode;
+    const st = document.getElementById('autoStat');
+    if (st) {
+      st.className = autoMode ? 'auto-status on' : 'auto-status';
+      st.textContent = autoMode ? t('auto_on') : t('auto_off');
+    }
+  }
+
+  if (scansRes?.scans) {
+    SCANS_DATA = scansRes.scans;
+    // Track latest completed scan's scope
+    const latest = SCANS_DATA.find(s => s.status === 'completed');
+    if (latest) {
+      lastScanCities = latest.cities || [];
+      // Filter market data to only show latest scan's cities
+      if (lastScanCities.length > 0) {
+        MARKET_COMPS = MARKET_COMPS.filter(c => lastScanCities.includes(c.city));
+        CITY_MARKETS = CITY_MARKETS.filter(c => lastScanCities.includes(c.city));
+      }
+    }
+  }
+
+  const pendCount = PROPS.filter(p => p.status === 'pending').length;
+  document.getElementById('pendBadge').textContent = pendCount;
+}
+
+function _formatTime(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return t('time_now');
+  if (diffMins < 60) return t('time_min_ago', { n: diffMins });
+  const diffHrs = Math.floor(diffMins / 60);
+  if (diffHrs < 24) return d.toLocaleTimeString(lang === 'it' ? 'it-IT' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+  if (diffHrs < 48) return t('time_yesterday');
+  return d.toLocaleDateString(lang === 'it' ? 'it-IT' : 'en-US', { month: 'short', day: 'numeric' });
+}
+
+// ===================== STATE =====================
+let curPage='dashboard', autoMode=false;
+let searchQ='', curTab='all', propPage=1;
+const PG=10;
+let selProp=null;
+let charts={};
+
+// ===================== HELPERS =====================
+function seasonText(s) {
+  if (s === 'alta') return t('high_season');
+  if (s === 'media') return t('mid_season');
+  return t('low_season');
+}
+
+// ===================== PAGES =====================
+function gotoPage(p){
+  curPage=p; propPage=1;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  const idx={dashboard:0,properties:1,market:2,analysis:3,log:4,scanHistory:5,settings:6,seasons:7};
+  document.querySelectorAll('.nav-item')[idx[p]||0]?.classList.add('active');
+  const titles={dashboard:t('title_dashboard'),properties:t('title_properties'),market:t('title_market'),analysis:t('title_analysis'),log:t('title_log'),scanHistory:t('title_scan_history'),settings:t('title_settings'),seasons:t('title_seasons')};
+  document.getElementById('pgTitle').textContent=titles[p]||p;
+  const el=document.getElementById('content');
+  const renders={dashboard:renderDash,properties:renderProps,market:renderMarket,analysis:renderAnalysis,log:renderLog,scanHistory:renderScanHistory,settings:renderSettings,seasons:renderSeasons};
+  el.innerHTML=(renders[p]||renderDash)();
+  setTimeout(()=>{
+    if(p==='dashboard'){buildTrend();buildCityBar();}
+    if(p==='market'){buildDemandChart();buildSeasonChart();}
+    if(p==='analysis'){buildAnalysisChart();}
+  },60);
+}
+
+// ===================== RENDER DASHBOARD =====================
+function renderDash(){
+  // Filter props to latest scan cities for metrics
+  const scopeProps = lastScanCities.length ? PROPS.filter(p=>lastScanCities.includes(p.city)) : PROPS;
+  const pending=scopeProps.filter(p=>p.status==='pending').length;
+  const applied=scopeProps.filter(p=>p.status==='applied').length;
+  const uplift=scopeProps.filter(p=>p.status==='pending').reduce((s,p)=>s+(p.sug-p.cur),0);
+  const avgMkt=scopeProps.length?Math.round(scopeProps.reduce((s,p)=>s+p.mkt,0)/scopeProps.length):0;
+  const avgCur=scopeProps.length?Math.round(scopeProps.reduce((s,p)=>s+p.cur,0)/scopeProps.length):0;
+  const gap=avgMkt?Math.round((avgMkt-avgCur)/avgMkt*100):0;
+  const scopeLabel = lastScanCities.length && lastScanCities.length < 10 ? lastScanCities.join(', ') : '';
+  return `
+  ${scopeLabel ? `<div style="margin-bottom:12px;padding:8px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;"><span style="color:var(--gold);">◉</span> ${lang==='en'?'Showing data for':'Dati per'}: <strong style="color:var(--text);">${scopeLabel}</strong></div>` : ''}
+  <div class="metrics">
+    <div class="mc" style="--mc-line:var(--gold)">
+      <div class="mc-label">${t('italian_market_avg')}</div>
+      <div class="mc-val">${MARKET_COMPS.length?'€'+avgMkt:'—'}</div>
+      <div class="mc-delta ${MARKET_COMPS.length?'up':'neu'}">${MARKET_COMPS.length?t('from_real_listings',{n:MARKET_COMPS.length}):t('run_scan_for_data')}</div>
+    </div>
+    <div class="mc" style="--mc-line:var(--text3)">
+      <div class="mc-label">${t('your_avg_price')}</div>
+      <div class="mc-val">€${avgCur}</div>
+      <div class="mc-delta dn">${t('below_market',{n:gap})}</div>
+    </div>
+    <div class="mc" style="--mc-line:var(--amber)">
+      <div class="mc-label">${t('pending_suggestions')}</div>
+      <div class="mc-val">${pending}</div>
+      <div class="mc-delta neu">${t('of_total_props',{n:PROPS.length})}</div>
+    </div>
+    <div class="mc" style="--mc-line:var(--green)">
+      <div class="mc-label">${t('est_nightly_gain')}</div>
+      <div class="mc-val">€${uplift}</div>
+      <div class="mc-delta up">${t('if_all_applied')}</div>
+    </div>
+    <div class="mc" style="--mc-line:var(--blue)">
+      <div class="mc-label">${t('applied_total')}</div>
+      <div class="mc-val">${applied}/${PROPS.length}</div>
+      <div class="mc-delta up">${t('pct_updated',{n:Math.round(applied/PROPS.length*100)})}</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="panel">
+      <div class="ph">
+        <span class="pt">${t('price_trend_30d')}</span>
+        <div style="display:flex;gap:14px;font-size:11px;color:var(--text3);">
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:2px;background:var(--gold);display:inline-block;"></span>${t('your_prices')}</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:2px;background:var(--text3);display:inline-block;border-top:1px dashed var(--text3);"></span>${t('market_avg')}</span>
+        </div>
+      </div>
+      <div class="pb"><div class="cw" style="height:230px;"><canvas id="trendChart"></canvas></div></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><span class="pt">${t('market_by_city')}</span></div>
+      <div class="pb" style="padding:0 18px;">
+        ${CITY_MARKETS.length ? CITY_MARKETS.slice(0,6).map(c=>`
+        <div class="mi">
+          <div class="mi-left">
+            <div class="mi-ico ${c.season==='alta'?'mia':'mib'}">🏛</div>
+            <div>
+              <div class="mi-name">${c.city}</div>
+              <div class="mi-loc">${c.region} · <span class="season ${c.season==='alta'?'s-alta':c.season==='media'?'s-media':'s-bassa'}">${seasonText(c.season)}</span></div>
+            </div>
+          </div>
+          <div class="mi-right">
+            <div class="mi-price">€${c.avgPrice}</div>
+            <div class="mi-occ">${c.occ}% ${t('occupancy')}</div>
+          </div>
+        </div>`).join('') : `<div class="empty-state"><div class="em-ico">◉</div><div>${t('no_market_data')}</div></div>`}
+      </div>
+    </div>
+  </div>
+
+  <div class="g2b">
+    <div class="panel">
+      <div class="ph"><span class="pt">${t('ai_insights')}</span></div>
+      <div class="pb" style="padding:0 18px;">
+        ${INSIGHTS_DATA.length ? INSIGHTS_DATA.map(i=>`
+        <div class="ins-item">
+          <div class="ins-dot" style="background:${i.color};"></div>
+          <div>
+            <div class="ins-text"><span class="itag ${i.tag==='URGENTE'?'it-high':i.tag==='EVENTO'?'it-med':i.tag==='OK'?'it-ok':'it-info'}">${i.tag}</span>${i.text}</div>
+            <div class="ins-sub">${i.sub}</div>
+          </div>
+        </div>`).join('') : `<div class="empty-state"><div class="em-ico">✦</div><div>${t('insights_after_scan')}</div></div>`}
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><span class="pt">${t('avg_prices_by_city')}</span></div>
+      <div class="pb"><div class="cw" style="height:280px;"><canvas id="cityChart"></canvas></div></div>
+    </div>
+  </div>`;
+}
+
+// ===================== RENDER PROPERTIES =====================
+function renderProps(){
+  let filtered=PROPS.filter(p=>{
+    if(searchQ&&!p.name.toLowerCase().includes(searchQ.toLowerCase())&&!p.city.toLowerCase().includes(searchQ.toLowerCase())&&!p.region.toLowerCase().includes(searchQ.toLowerCase()))return false;
+    if(curTab==='pending'&&p.status!=='pending')return false;
+    if(curTab==='applied'&&p.status!=='applied')return false;
+    if(curTab==='skip'&&p.status!=='skip')return false;
+    return true;
+  });
+  const total=filtered.length;
+  const pages=Math.max(1,Math.ceil(total/PG));
+  if(propPage>pages)propPage=1;
+  const slice=filtered.slice((propPage-1)*PG,propPage*PG);
+  const pndCount=filtered.filter(p=>p.status==='pending').length;
+
+  return `<div class="panel" id="addPropPanel" style="margin-bottom:16px;display:none;">
+    <div class="ph"><span class="pt">${t('add_new_property')}</span><button class="btn b-skip" onclick="document.getElementById('addPropPanel').style.display='none'">${t('close')}</button></div>
+    <div class="add-form">
+      <div class="form-group"><label>${t('property_name')}</label><input type="text" id="ap_name" placeholder="${lang==='it'?'es. Villa Trastevere':'e.g. Villa Trastevere'}"></div>
+      <div class="form-group"><label>${t('property_type')}</label><input type="text" id="ap_type" placeholder="${lang==='it'?'es. 2 locali · Storico':'e.g. 2 rooms · Historic'}"></div>
+      <div class="form-group"><label>${t('city')}</label>
+        <select id="ap_city"><option value="Roma">Roma</option><option value="Firenze">Firenze</option><option value="Venezia">Venezia</option><option value="Milano">Milano</option><option value="Napoli">Napoli</option><option value="Amalfi">Amalfi</option><option value="Sicilia">Sicilia</option><option value="Sardegna">Sardegna</option><option value="Toscana">Toscana</option><option value="Como">Como</option></select>
+      </div>
+      <div class="form-group"><label>${t('region')}</label><input type="text" id="ap_region" placeholder="${lang==='it'?'es. Lazio':'e.g. Lazio'}"></div>
+      <div class="form-group"><label>${t('platform')}</label>
+        <select id="ap_platform"><option value="both">${t('both_platforms')}</option><option value="airbnb">Airbnb</option><option value="booking">Booking.com</option></select>
+      </div>
+      <div class="form-group"><label>${t('current_price_label')}</label><input type="number" id="ap_price" placeholder="${lang==='it'?'es. 150':'e.g. 150'}"></div>
+      <div class="full"><button class="add-btn" onclick="addProperty()">${t('add_property_btn')}</button></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="tctrl">
+      <div class="srch-wrap">
+        <span class="srch-ico">⌕</span>
+        <input class="srch" type="text" placeholder="${t('search_placeholder')}" id="srchInp" value="${searchQ}" oninput="onSearch(this.value)">
+      </div>
+      <button class="btn b-bulk-apply" onclick="document.getElementById('addPropPanel').style.display='block'" style="margin-right:8px;">${t('add_property')}</button>
+      <div class="tabs">
+        <button class="tab ${curTab==='all'?'active':''}" onclick="setTab('all')">${t('tab_all')} (${PROPS.length})</button>
+        <button class="tab ${curTab==='pending'?'active':''}" onclick="setTab('pending')">${t('tab_pending')} (${PROPS.filter(p=>p.status==='pending').length})</button>
+        <button class="tab ${curTab==='applied'?'active':''}" onclick="setTab('applied')">${t('tab_applied')}</button>
+        <button class="tab ${curTab==='skip'?'active':''}" onclick="setTab('skip')">${t('tab_skipped')}</button>
+      </div>
+    </div>
+    ${pndCount>0&&curTab!=='skip'?`
+    <div class="bulk-bar">
+      <div class="bulk-info"><strong>${pndCount}</strong> ${t('suggestions_pending',{n:''}).trim()}</div>
+      <div class="bulk-acts">
+        <button class="btn b-bulk-skip" onclick="bulkSkip()">${t('skip_all')}</button>
+        <button class="btn b-bulk-apply" onclick="bulkAll()">${t('apply_all_n',{n:pndCount})}</button>
+      </div>
+    </div>`:''}
+    <div style="overflow-x:auto;">
+      <table class="ptable">
+        <thead><tr>
+          <th>${t('th_property')}</th><th>${t('th_city')}</th><th>${t('th_platform')}</th>
+          <th>${t('th_current')}</th><th>${t('th_market')}</th><th>${t('th_suggested')}</th>
+          <th>${t('th_change')}</th><th>${t('th_demand')}</th><th>${t('th_status')}</th><th>${t('th_action')}</th>
+        </tr></thead>
+        <tbody>
+          ${slice.map(p=>{
+            const diff=p.sug-p.cur;
+            const pct=((diff/p.cur)*100).toFixed(1);
+            const cc=diff>0?'chup':diff<0?'chdn':'chneu';
+            const cl=diff>0?`+€${diff} (+${pct}%)`:diff<0?`-€${Math.abs(diff)} (${pct}%)`:t('unchanged');
+            const dc=p.demand>=80?'#4caf82':p.demand>=60?'#d4914a':'#e05252';
+            const sb=p.status==='pending'?`<span class="sbadge st-p">${t('status_pending')}</span>`:p.status==='applied'?`<span class="sbadge st-a">${t('status_applied')}</span>`:`<span class="sbadge st-s">${t('status_skipped')}</span>`;
+            const pt=p.platform==='airbnb'?'<span class="ptag tag-a">Airbnb</span>':p.platform==='booking'?'<span class="ptag tag-b">Booking</span>':`<span class="ptag tag-both">${t('both_platforms')}</span>`;
+            const acts=p.status==='pending'
+              ?`<button class="btn b-apply" onclick="openModal(${p.id})">${t('btn_apply')}</button><button class="btn b-skip" onclick="skipProp(${p.id})" style="margin-left:4px;">${t('btn_skip')}</button>`
+              :p.status==='applied'
+              ?`<button class="btn b-done" disabled>${t('btn_done')}</button>`
+              :`<button class="btn b-skipped" disabled>${t('btn_skipped')}</button>`;
+            return `<tr>
+              <td><div class="pname">${p.name}</div><div class="pmeta">${p.type}</div></td>
+              <td style="color:var(--text2);font-size:12px;">${p.city}<br><span style="color:var(--text3);font-size:10px;">${p.region}</span></td>
+              <td>${pt}</td>
+              <td class="pcur">€${p.cur}</td>
+              <td class="pmkt">€${p.mkt}</td>
+              <td><div class="psug">€${p.sug}</div>${p.reasoning?`<div class="pmeta" style="max-width:140px;" title="${p.reasoning}">${p.reasoning.slice(0,45)}${p.reasoning.length>45?'…':''}</div>`:''}</td>
+              <td class="${cc}">${cl}</td>
+              <td><div class="dbar"><div class="dtrack"><div class="dfill" style="width:${p.demand}%;background:${dc};"></div></div><span class="dscore">${p.demand}</span></div></td>
+              <td>${sb}</td>
+              <td>${acts}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <div class="pager-info">${t('showing',{from:total===0?0:(propPage-1)*PG+1,to:Math.min(propPage*PG,total),total})}</div>
+      <div class="pager-btns">
+        <button class="pb-btn" onclick="goPg(${propPage-1})" ${propPage<=1?'disabled':''}>←</button>
+        ${Array.from({length:pages},(_,i)=>`<button class="pb-btn ${i+1===propPage?'act':''}" onclick="goPg(${i+1})">${i+1}</button>`).join('')}
+        <button class="pb-btn" onclick="goPg(${propPage+1})" ${propPage>=pages?'disabled':''}>→</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ===================== RENDER MARKET =====================
+function renderMarket(){
+  const airbnbComps = MARKET_COMPS.filter(m=>m.platform==='airbnb');
+  const bookingComps = MARKET_COMPS.filter(m=>m.platform==='booking');
+  const avgAirbnb = airbnbComps.length ? Math.round(airbnbComps.reduce((s,m)=>s+m.price,0)/airbnbComps.length) : 0;
+  const avgBooking = bookingComps.length ? Math.round(bookingComps.reduce((s,m)=>s+m.price,0)/bookingComps.length) : 0;
+  const hasData = MARKET_COMPS.length > 0;
+  const scopeLabel = lastScanCities.length && lastScanCities.length < 10 ? lastScanCities.join(', ') : '';
+
+  return `
+  ${scopeLabel ? `<div style="margin-bottom:12px;padding:8px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;"><span style="color:var(--gold);">◉</span> ${lang==='en'?'Market data for':'Dati di mercato per'}: <strong style="color:var(--text);">${scopeLabel}</strong></div>` : ''}
+  <div class="metrics" style="grid-template-columns:repeat(4,minmax(0,1fr));">
+    <div class="mc" style="--mc-line:#ff7a7e"><div class="mc-label">${t('airbnb_avg')}</div><div class="mc-val">${hasData?'€'+avgAirbnb:'—'}</div><div class="mc-delta ${hasData?'neu':'dn'}">${hasData?t('listings_collected',{n:airbnbComps.length}):t('no_data_run_scan')}</div></div>
+    <div class="mc" style="--mc-line:var(--blue)"><div class="mc-label">${t('booking_avg')}</div><div class="mc-val">${hasData?'€'+avgBooking:'—'}</div><div class="mc-delta ${hasData?'neu':'dn'}">${hasData?t('listings_collected',{n:bookingComps.length}):t('no_data_run_scan')}</div></div>
+    <div class="mc" style="--mc-line:var(--green)"><div class="mc-label">${t('cities_analyzed')}</div><div class="mc-val">${CITY_MARKETS.length}</div><div class="mc-delta neu">${CITY_MARKETS.length ? CITY_MARKETS.map(c=>c.city).join(', ') : t('none')}</div></div>
+    <div class="mc" style="--mc-line:var(--amber)"><div class="mc-label">${t('total_listings')}</div><div class="mc-val">${MARKET_COMPS.length.toLocaleString(lang==='it'?'it-IT':'en-US')}</div><div class="mc-delta neu">${hasData?t('real_scraped_data'):t('click_analyze')}</div></div>
+  </div>
+
+  ${!hasData ? `
+  <div class="panel" style="margin-bottom:16px;">
+    <div class="empty-state">
+      <div class="em-ico">◉</div>
+      <div>${t('no_market_available')}</div>
+      <div>${t('click_analyze_topbar')}</div>
+      <div>${t('scraper_collects')}</div>
+    </div>
+  </div>` : `
+  <div class="g2b" style="margin-bottom:16px;">
+    <div class="panel">
+      <div class="ph"><span class="pt">${t('collected_airbnb',{n:airbnbComps.length})}</span><span class="sc-src src-airbnb">Airbnb</span></div>
+      ${airbnbComps.length ? `<div class="sc-grid">
+        ${airbnbComps.slice(0,12).map(m=>`
+        <div class="scrape-card">
+          <div>
+            <div class="sc-name">${m.name}</div>
+            <div class="sc-meta">${m.city} ${m.rating ? '· ★ '+m.rating : ''}</div>
+          </div>
+          <div class="sc-price">€${m.price}</div>
+        </div>`).join('')}
+        ${airbnbComps.length>12?`<div style="text-align:center;padding:8px;color:var(--text3);font-size:12px;">${t('more_listings',{n:airbnbComps.length-12})}</div>`:''}
+      </div>` : `<div class="empty-state">${t('no_airbnb_data')}</div>`}
+    </div>
+    <div class="panel">
+      <div class="ph"><span class="pt">${t('collected_booking',{n:bookingComps.length})}</span><span class="sc-src src-booking">Booking</span></div>
+      ${bookingComps.length ? `<div class="sc-grid">
+        ${bookingComps.slice(0,12).map(m=>`
+        <div class="scrape-card">
+          <div>
+            <div class="sc-name">${m.name}</div>
+            <div class="sc-meta">${m.city} ${m.rating ? '· ★ '+m.rating : ''}</div>
+          </div>
+          <div class="sc-price">€${m.price}</div>
+        </div>`).join('')}
+        ${bookingComps.length>12?`<div style="text-align:center;padding:8px;color:var(--text3);font-size:12px;">${t('more_listings',{n:bookingComps.length-12})}</div>`:''}
+      </div>` : `<div class="empty-state">${t('no_booking_data')}</div>`}
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:16px;">
+    <div class="ph"><span class="pt">${t('city_summary_real')}</span></div>
+    <div class="region-grid">
+      ${CITY_MARKETS.map(c=>`
+      <div class="rcard">
+        <div class="rc-city">${c.city}</div>
+        <div class="rc-region">${c.region} · <span class="season ${c.season==='alta'?'s-alta':c.season==='media'?'s-media':'s-bassa'}">${seasonText(c.season)}</span></div>
+        <div class="rc-price">€${c.avgPrice}<span style="font-size:11px;color:var(--text3);">${t('per_night')}</span></div>
+        <div class="rc-sub">${c.occ}% ${t('occupancy')} · <span class="${c.trend>0?'up':'dn'}">▲ ${c.trend}%</span></div>
+        <div class="rc-bar"><div class="rc-fill" style="width:${c.occ}%;"></div></div>
+      </div>`).join('')}
+    </div>
+  </div>`}
+
+  <div class="g2b">
+    <div class="panel">
+      <div class="ph"><span class="pt">${t('demand_by_day')}</span></div>
+      <div class="pb"><div class="cw" style="height:220px;"><canvas id="demandChart"></canvas></div></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><span class="pt">${t('avg_by_region_season')}</span></div>
+      <div class="pb"><div class="cw" style="height:200px;"><canvas id="seasonChart"></canvas></div></div>
+    </div>
+  </div>`;
+}
+
+// ===================== RENDER ANALYSIS =====================
+function renderAnalysis(){
+  // Scope to latest scan cities
+  const scopeProps = lastScanCities.length ? PROPS.filter(p=>lastScanCities.includes(p.city)) : PROPS;
+  const pending=scopeProps.filter(p=>p.status==='pending');
+  const totalUplift=pending.reduce((s,p)=>s+(p.sug-p.cur),0);
+  const avgMkt=scopeProps.length?Math.round(scopeProps.reduce((s,p)=>s+p.mkt,0)/scopeProps.length):0;
+  const avgCur=scopeProps.length?Math.round(scopeProps.reduce((s,p)=>s+p.cur,0)/scopeProps.length):0;
+  const gap=avgMkt?Math.round((avgMkt-avgCur)/avgMkt*100):0;
+  const topProps=scopeProps.slice().sort((a,b)=>(b.sug-b.cur)-(a.sug-a.cur)).slice(0,5);
+  const scopeLabel = lastScanCities.length && lastScanCities.length < 10 ? lastScanCities.join(', ') : '';
+  return `
+  ${scopeLabel ? `<div style="margin-bottom:12px;padding:8px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;"><span style="color:var(--gold);">◉</span> ${lang==='en'?'Analysis for':'Analisi per'}: <strong style="color:var(--text);">${scopeLabel}</strong></div>` : ''}
+  <div class="ai-box">
+    <div class="ai-box-title"><span class="ai-tag">✦</span> ${t('ai_summary_title')}</div>
+    <div class="ai-text">${t('ai_summary_text',{listings:MARKET_COMPS.length.toLocaleString(),gap:gap,pending:pending.length,uplift:totalUplift,cityCount:lastScanCities.length||CITY_MARKETS.length,cityNames:lastScanCities.length?lastScanCities.join(', '):CITY_MARKETS.map(c=>c.city).join(', ')})}</div>
+  </div>
+  <div class="g2b">
+    <div class="panel">
+      <div class="ph"><span class="pt">${t('top_price_opportunities')}</span></div>
+      <table class="ptable">
+        <thead><tr><th>${t('th_property')}</th><th>${t('th_current_short')}</th><th>${t('th_suggested_short')}</th><th>${t('th_gain_night')}</th><th>${t('th_demand')}</th></tr></thead>
+        <tbody>
+          ${topProps.map(p=>{
+            const diff=p.sug-p.cur;
+            const dc=p.demand>=80?'#4caf82':p.demand>=60?'#d4914a':'#e05252';
+            return `<tr>
+              <td><div class="pname">${p.name}</div><div class="pmeta">${p.city}</div></td>
+              <td class="pcur">€${p.cur}</td>
+              <td class="psug">€${p.sug}</td>
+              <td class="chup">+€${diff}</td>
+              <td><div class="dbar"><div class="dtrack"><div class="dfill" style="width:${p.demand}%;background:${dc};"></div></div><span class="dscore">${p.demand}</span></div></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <div class="ph"><span class="pt">${t('suggestion_dist_city')}</span></div>
+      <div class="pb"><div class="cw" style="height:280px;"><canvas id="analysisChart"></canvas></div></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><span class="pt">${t('detailed_insights')}</span></div>
+    <div class="pb" style="padding:0 18px;">
+      ${INSIGHTS_DATA.map(i=>`
+      <div class="ins-item">
+        <div class="ins-dot" style="background:${i.color};"></div>
+        <div>
+          <div class="ins-text"><span class="itag ${i.tag==='URGENTE'?'it-high':i.tag==='EVENTO'?'it-med':i.tag==='OK'?'it-ok':'it-info'}">${i.tag}</span>${i.text}</div>
+          <div class="ins-sub">${i.sub}</div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ===================== RENDER LOG =====================
+function renderLog(){
+  return `<div class="panel">
+    <div class="ph"><span class="pt">${t('price_update_history')}</span><span style="font-size:11px;color:var(--text3);">${t('recent_events',{n:LOG_DATA.length})}</span></div>
+    <div style="padding:0 18px;">
+      ${LOG_DATA.map(l=>`
+      <div class="log-row">
+        <div class="log-time">${l.time}</div>
+        <div class="log-body"><strong>${l.prop}</strong> — ${l.action}: <span style="font-family:var(--font-mono);color:var(--text3);">€${l.from}</span> → <span style="font-family:var(--font-mono);color:var(--green);">€${l.to}</span>
+        <span class="lbadge ${l.type==='auto'?'lb-a':l.type==='manual'?'lb-m':''}">${l.type==='auto'?t('type_auto'):l.type==='manual'?t('type_manual'):t('type_skipped')}</span></div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ===================== RENDER SETTINGS =====================
+function renderSettings(){
+  return `
+  <div class="panel" style="margin-bottom:16px;max-width:680px;">
+    <div class="ph"><span class="pt">${t('pricing_rules')}</span></div>
+    <div class="pb">
+      <div class="set-row"><div><div class="set-lbl">${t('price_floor')}</div><div class="set-desc">${t('price_floor_desc')}</div></div><div class="rng-wrap"><input class="rng" type="range" min="30" max="200" value="60" oninput="document.getElementById('rv1').textContent='€'+this.value"><span class="rng-v" id="rv1">€60</span></div></div>
+      <div class="set-row"><div><div class="set-lbl">${t('price_ceiling')}</div><div class="set-desc">${t('price_ceiling_desc')}</div></div><div class="rng-wrap"><input class="rng" type="range" min="500" max="3000" value="1200" oninput="document.getElementById('rv2').textContent='€'+this.value"><span class="rng-v" id="rv2">€1200</span></div></div>
+      <div class="set-row"><div><div class="set-lbl">${t('market_undercut')}</div><div class="set-desc">${t('market_undercut_desc')}</div></div><div class="rng-wrap"><input class="rng" type="range" min="0" max="20" value="4" oninput="document.getElementById('rv3').textContent=this.value+'%'"><span class="rng-v" id="rv3">4%</span></div></div>
+      <div class="set-row"><div><div class="set-lbl">${t('weekend_premium')}</div><div class="set-desc">${t('weekend_premium_desc')}</div></div><div class="rng-wrap"><input class="rng" type="range" min="0" max="50" value="20" oninput="document.getElementById('rv4').textContent=this.value+'%'"><span class="rng-v" id="rv4">20%</span></div></div>
+      <div class="set-row"><div><div class="set-lbl">${t('scan_frequency')}</div><div class="set-desc">${t('scan_frequency_desc')}</div></div><select class="fsel"><option>${t('every_6h')}</option><option selected>${t('every_12h')}</option><option>${t('daily')}</option></select></div>
+      <div class="set-row"><div><div class="set-lbl">${t('auto_update_mode')}</div><div class="set-desc">${t('auto_update_desc')}</div></div><label class="toggle"><input type="checkbox" ${autoMode?'checked':''} onchange="toggleAuto(this);document.getElementById('autoTgl').checked=this.checked;"><div class="t-track"></div><div class="t-thumb"></div></label></div>
+    </div>
+  </div>`;
+}
+
+// ===================== RENDER SEASONS =====================
+function renderSeasons(){
+  const seasons=[
+    {name:t('high_season_label'),  months:lang==='it'?'Lug–Ago':'Jul–Aug',  mult:"2.0×", cities:"Amalfi, Sardegna, Sicilia, Venezia", color:"var(--gold)"},
+    {name:t('spring_label'),       months:lang==='it'?'Apr–Giu':'Apr–Jun',  mult:"1.5×", cities:lang==='it'?'Firenze, Roma, Como, Venezia (Biennale)':'Florence, Rome, Como, Venice (Biennale)', color:"var(--green)"},
+    {name:t('autumn_label'),       months:lang==='it'?'Set–Ott':'Sep–Oct',  mult:"1.3×", cities:lang==='it'?'Toscana, Roma, Milano (Fashion Week)':'Tuscany, Rome, Milan (Fashion Week)', color:"var(--blue)"},
+    {name:t('low_season_label'),   months:lang==='it'?'Nov–Mar':'Nov–Mar',  mult:"0.8×", cities:lang==='it'?'Tutte le città costiere':'All coastal cities', color:"var(--text3)"},
+  ];
+  return `
+  <div class="region-grid" style="grid-template-columns:repeat(2,1fr);padding:0;gap:12px;margin-bottom:16px;">
+    ${seasons.map(s=>`
+    <div class="rcard">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <div class="rc-city">${s.name}</div>
+          <div class="rc-region">${s.months}</div>
+        </div>
+        <span style="font-family:var(--font-mono);font-size:20px;color:${s.color};font-weight:300;">${s.mult}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);">${s.cities}</div>
+    </div>`).join('')}
+  </div>
+  <div class="panel">
+    <div class="ph"><span class="pt">${t('avg_by_season_area')}</span></div>
+    <div class="region-grid">
+      ${CITY_MARKETS.map(c=>`
+      <div class="rcard">
+        <div class="rc-city">${c.city}</div>
+        <div class="rc-region">${c.region}</div>
+        <div class="rc-price">€${c.avgPrice}<span style="font-size:11px;color:var(--text3);">${t('per_night')}</span></div>
+        <div class="rc-sub">${c.occ}% ${t('occupancy')} · <span class="${c.trend>10?'up':c.trend>0?'neu':'dn'}">▲ ${c.trend}%</span></div>
+        <div class="rc-bar"><div class="rc-fill" style="width:${c.occ}%;"></div></div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ===================== RENDER SCAN HISTORY =====================
+function renderScanHistory(){
+  if (viewingScanId) return renderScanDetail(viewingScanId);
+
+  return `
+  <div class="panel" style="margin-bottom:16px;">
+    <div class="ph"><span class="pt">${t('title_scan_history')}</span><span style="font-size:11px;color:var(--text3);">${t('scan_history_desc')}</span></div>
+    <div style="padding:16px 18px;">
+      ${SCANS_DATA.length ? `<div class="scan-list">
+        ${SCANS_DATA.map(s => {
+          const date = new Date(s.started_at);
+          const dateStr = date.toLocaleDateString(lang==='it'?'it-IT':'en-US', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+          const stClass = s.status==='completed'?'scan-st-ok':s.status==='failed'?'scan-st-fail':'scan-st-run';
+          const stText = s.status==='completed'?t('scan_completed'):s.status==='failed'?t('scan_failed'):t('scan_running');
+          const cities = (s.cities || []).join(', ');
+          return `<div class="scan-card" onclick="viewScan(${s.id})">
+            <div class="scan-hdr">
+              <div class="scan-date">#${s.id} — ${dateStr}</div>
+              <span class="scan-status ${stClass}">${stText}</span>
+            </div>
+            <div class="scan-stats">
+              <span><span class="sc-src src-airbnb">${t('scan_airbnb_label')}</span> <span class="num">${s.airbnb_count||0}</span></span>
+              <span><span class="sc-src src-booking">${t('scan_booking_label')}</span> <span class="num">${s.booking_count||0}</span></span>
+              <span>${t('scan_total_label')}: <span class="num">${s.total_listings||0}</span></span>
+              <span>${t('scan_suggestions_label')}: <span class="num">${s.suggestions_count||0}</span></span>
+            </div>
+            <div class="scan-cities">${t('scan_cities_label')} ${cities || '—'}</div>
+          </div>`;
+        }).join('')}
+      </div>` : `<div class="empty-state"><div class="em-ico">⟳</div><div>${t('scan_no_history')}</div></div>`}
+    </div>
+  </div>`;
+}
+
+async function viewScan(scanId) {
+  viewingScanId = scanId;
+  document.getElementById('content').innerHTML = '<div class="empty-state"><div class="em-ico">⟳</div><div>Loading scan data...</div></div>';
+  const res = await api('/scans/' + scanId);
+  if (!res) { viewingScanId = null; return; }
+  window._scanDetail = res;
+  document.getElementById('content').innerHTML = renderScanDetail(scanId);
+}
+
+function renderScanDetail(scanId) {
+  const detail = window._scanDetail;
+  if (!detail) return '<div class="empty-state">Loading...</div>';
+  const s = detail.scan;
+  const comps = detail.comps || [];
+  const date = new Date(s.started_at);
+  const dateStr = date.toLocaleDateString(lang==='it'?'it-IT':'en-US', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  let cityMarkets = [];
+  try { cityMarkets = typeof s.city_markets_snapshot === 'string' ? JSON.parse(s.city_markets_snapshot) : (s.city_markets_snapshot || []); } catch(e) {}
+  let insightsSnap = [];
+  try { insightsSnap = typeof s.insights_snapshot === 'string' ? JSON.parse(s.insights_snapshot) : (s.insights_snapshot || []); } catch(e) {}
+
+  const airbnbComps = comps.filter(c => c.platform === 'airbnb');
+  const bookingComps = comps.filter(c => c.platform === 'booking');
+
+  return `
+  <div style="margin-bottom:16px;">
+    <button class="btn b-skip" onclick="viewingScanId=null;gotoPage('scanHistory')" style="margin-bottom:12px;">${t('scan_back')}</button>
+    <div style="font-family:var(--font-display);font-size:22px;color:var(--text);">${t('scan_detail_title', {id: s.id, date: dateStr})}</div>
+  </div>
+
+  <div class="metrics" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px;">
+    <div class="mc" style="--mc-line:#ff7a7e"><div class="mc-label">${t('scan_airbnb_label')}</div><div class="mc-val">${s.airbnb_count||0}</div><div class="mc-delta neu">${t('listings_collected',{n:s.airbnb_count||0})}</div></div>
+    <div class="mc" style="--mc-line:var(--blue)"><div class="mc-label">${t('scan_booking_label')}</div><div class="mc-val">${s.booking_count||0}</div><div class="mc-delta neu">${t('listings_collected',{n:s.booking_count||0})}</div></div>
+    <div class="mc" style="--mc-line:var(--green)"><div class="mc-label">${t('cities_analyzed')}</div><div class="mc-val">${(s.cities||[]).length}</div><div class="mc-delta neu">${(s.cities||[]).join(', ')}</div></div>
+    <div class="mc" style="--mc-line:var(--amber)"><div class="mc-label">${t('scan_suggestions_label')}</div><div class="mc-val">${s.suggestions_count||0}</div><div class="mc-delta neu">${t('scan_total_label')}: ${s.total_listings||0}</div></div>
+  </div>
+
+  ${s.error_message ? `<div class="ai-box" style="border-color:rgba(224,82,82,.3);margin-bottom:16px;"><div class="ai-text" style="color:var(--red);">Error: ${s.error_message}</div></div>` : ''}
+
+  ${cityMarkets.length ? `
+  <div class="panel" style="margin-bottom:16px;">
+    <div class="ph"><span class="pt">${t('scan_city_markets_snap')}</span></div>
+    <div class="region-grid">
+      ${cityMarkets.map(c => `
+      <div class="rcard">
+        <div class="rc-city">${c.city}</div>
+        <div class="rc-region">${c.region} · <span class="season ${c.season==='alta'?'s-alta':c.season==='media'?'s-media':'s-bassa'}">${seasonText(c.season)}</span></div>
+        <div class="rc-price">€${c.avg_price}<span style="font-size:11px;color:var(--text3);">${t('per_night')}</span></div>
+        <div class="rc-sub">${c.occupancy}% ${t('occupancy')}</div>
+        <div class="rc-bar"><div class="rc-fill" style="width:${c.occupancy}%;"></div></div>
+      </div>`).join('')}
+    </div>
+  </div>` : ''}
+
+  ${insightsSnap.length ? `
+  <div class="panel" style="margin-bottom:16px;">
+    <div class="ph"><span class="pt">${t('scan_insights_snap')}</span></div>
+    <div class="pb" style="padding:0 18px;">
+      ${insightsSnap.map(i => `
+      <div class="ins-item">
+        <div class="ins-dot" style="background:${i.color};"></div>
+        <div>
+          <div class="ins-text"><span class="itag ${i.tag==='URGENTE'?'it-high':i.tag==='EVENTO'?'it-med':i.tag==='OK'?'it-ok':'it-info'}">${i.tag}</span>${i.text}</div>
+          <div class="ins-sub">${i.sub}</div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>` : ''}
+
+  <div class="g2b">
+    <div class="panel">
+      <div class="ph"><span class="pt">${t('collected_airbnb',{n:airbnbComps.length})}</span><span class="sc-src src-airbnb">Airbnb</span></div>
+      ${airbnbComps.length ? `<div class="sc-grid">
+        ${airbnbComps.slice(0,20).map(m => `
+        <div class="scrape-card">
+          <div><div class="sc-name">${m.name}</div><div class="sc-meta">${m.city} ${m.rating?'· ★ '+m.rating:''}</div></div>
+          <div class="sc-price">€${m.price}</div>
+        </div>`).join('')}
+        ${airbnbComps.length>20?`<div style="text-align:center;padding:8px;color:var(--text3);font-size:12px;">${t('more_listings',{n:airbnbComps.length-20})}</div>`:''}
+      </div>` : `<div class="empty-state">${t('no_airbnb_data')}</div>`}
+    </div>
+    <div class="panel">
+      <div class="ph"><span class="pt">${t('collected_booking',{n:bookingComps.length})}</span><span class="sc-src src-booking">Booking</span></div>
+      ${bookingComps.length ? `<div class="sc-grid">
+        ${bookingComps.slice(0,20).map(m => `
+        <div class="scrape-card">
+          <div><div class="sc-name">${m.name}</div><div class="sc-meta">${m.city} ${m.rating?'· ★ '+m.rating:''}</div></div>
+          <div class="sc-price">€${m.price}</div>
+        </div>`).join('')}
+        ${bookingComps.length>20?`<div style="text-align:center;padding:8px;color:var(--text3);font-size:12px;">${t('more_listings',{n:bookingComps.length-20})}</div>`:''}
+      </div>` : `<div class="empty-state">${t('no_booking_data')}</div>`}
+    </div>
+  </div>`;
+}
+
+// ===================== CHARTS =====================
+function buildTrend(){
+  const ctx=document.getElementById('trendChart');
+  if(!ctx)return;
+  if(charts.trend)charts.trend.destroy();
+  const labels=['20 Feb','24 Feb','28 Feb','3 Mar','7 Mar','11 Mar','15 Mar','19 Mar'];
+  charts.trend=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[
+      {label:t('chart_your_prices'),data:[188,195,200,205,210,215,218,225],borderColor:'#c9973a',backgroundColor:'rgba(201,151,58,0.07)',tension:0.4,pointRadius:3,pointBackgroundColor:'#c9973a',fill:true,borderWidth:2},
+      {label:t('chart_market'),data:[230,235,238,242,246,250,254,258],borderColor:'#5c5040',backgroundColor:'transparent',tension:0.4,pointRadius:2,borderDash:[5,4],borderWidth:1.5}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{font:{size:10},color:'#5c5040',maxRotation:30},grid:{color:'rgba(255,240,210,0.04)'}},
+        y:{ticks:{font:{size:10},color:'#5c5040',callback:v=>'€'+v},grid:{color:'rgba(255,240,210,0.04)'}}
+      }}
+  });
+}
+
+function buildCityBar(){
+  const ctx=document.getElementById('cityChart');
+  if(!ctx)return;
+  if(charts.city)charts.city.destroy();
+  charts.city=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:CITY_MARKETS.map(c=>c.city),
+      datasets:[
+        {label:t('chart_market_avg'),data:CITY_MARKETS.map(c=>c.avgPrice),backgroundColor:'rgba(201,151,58,0.5)',borderRadius:4},
+        {label:t('chart_your_price'),data:CITY_MARKETS.map(c=>{const props=PROPS.filter(p=>p.city===c.city);return props.length?Math.round(props.reduce((s,p)=>s+p.cur,0)/props.length):null;}),backgroundColor:'rgba(76,175,130,0.5)',borderRadius:4}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'bottom',labels:{color:'#a09070',font:{size:11},boxWidth:10,padding:8}}},
+      scales:{
+        x:{ticks:{font:{size:10},color:'#5c5040',maxRotation:40},grid:{display:false}},
+        y:{ticks:{font:{size:10},color:'#5c5040',callback:v=>'€'+v},grid:{color:'rgba(255,240,210,0.04)'}}
+      }}
+  });
+}
+
+function buildDemandChart(){
+  const ctx=document.getElementById('demandChart');
+  if(!ctx)return;
+  if(charts.demand)charts.demand.destroy();
+  const days=t('chart_days');
+  const data=[62,58,64,70,88,97,92];
+  charts.demand=new Chart(ctx,{
+    type:'bar',
+    data:{labels:days,datasets:[{data,backgroundColor:data.map(d=>d>=85?'#4caf82':d>=70?'#c9973a':'#5c5040'),borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{font:{size:11},color:'#5c5040'},grid:{display:false}},
+        y:{ticks:{font:{size:10},color:'#5c5040',callback:v=>v+'%'},grid:{color:'rgba(255,240,210,0.04)'},max:100}
+      }}
+  });
+}
+
+function buildSeasonChart(){
+  const ctx=document.getElementById('seasonChart');
+  if(!ctx)return;
+  if(charts.season)charts.season.destroy();
+  charts.season=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:t('chart_months'),
+      datasets:[
+        {label:t('chart_coastal'),data:[140,145,200,310,380,520,780,850,480,280,160,145],backgroundColor:'rgba(201,151,58,0.6)',borderRadius:3},
+        {label:t('chart_art_cities'),data:[180,185,240,280,320,340,360,370,320,290,210,200],backgroundColor:'rgba(106,159,216,0.5)',borderRadius:3},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'bottom',labels:{color:'#a09070',font:{size:11},boxWidth:10,padding:8}}},
+      scales:{
+        x:{ticks:{font:{size:10},color:'#5c5040'},grid:{display:false}},
+        y:{ticks:{font:{size:10},color:'#5c5040',callback:v=>'€'+v},grid:{color:'rgba(255,240,210,0.04)'}}
+      }}
+  });
+}
+
+function buildAnalysisChart(){
+  const ctx=document.getElementById('analysisChart');
+  if(!ctx)return;
+  if(charts.analysis)charts.analysis.destroy();
+  const scopeProps = lastScanCities.length ? PROPS.filter(p=>lastScanCities.includes(p.city)) : PROPS;
+  const cities=[...new Set(scopeProps.map(p=>p.city))];
+  const upliftByCityPending=cities.map(c=>{
+    const props=scopeProps.filter(p=>p.city===c&&p.status==='pending');
+    return props.reduce((s,p)=>s+(p.sug-p.cur),0);
+  });
+  charts.analysis=new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels:cities,
+      datasets:[{data:upliftByCityPending.map(v=>Math.max(v,0)),backgroundColor:['#c9973a','#4caf82','#6a9fd8','#e05252','#d4914a','#a09070','#e8c06a','#2dce89','#4c8dff','#ce5252'],borderWidth:0,hoverOffset:6}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{display:true,position:'bottom',labels:{color:'#a09070',font:{size:11},boxWidth:10,padding:6}}}}
+  });
+}
+
+// ===================== ACTIONS =====================
+const CITY_REGIONS = {Roma:'Lazio',Firenze:'Toscana',Venezia:'Veneto',Milano:'Lombardia',Napoli:'Campania',Amalfi:'Campania',Sicilia:'Sicilia',Sardegna:'Sardegna',Toscana:'Toscana',Como:'Lombardia'};
+
+async function addProperty(){
+  const name = document.getElementById('ap_name').value.trim();
+  const type = document.getElementById('ap_type').value.trim();
+  const city = document.getElementById('ap_city').value;
+  const region = document.getElementById('ap_region').value.trim() || CITY_REGIONS[city] || '';
+  const platform = document.getElementById('ap_platform').value;
+  const price = parseInt(document.getElementById('ap_price').value) || 0;
+
+  if (!name) { showNotif(t('notif_enter_name')); return; }
+  if (!price) { showNotif(t('notif_enter_price')); return; }
+
+  const res = await api('/properties', {
+    method: 'POST',
+    body: { name, type, city, region, platform, current_price: price }
+  });
+  if (!res) return;
+
+  await loadAllData();
+  document.getElementById('addPropPanel').style.display='none';
+  document.getElementById('content').innerHTML = renderProps();
+  showNotif(t('notif_added', { name }));
+}
+
+const ALL_CITIES = ['Roma','Firenze','Venezia','Milano','Napoli','Amalfi','Sicilia','Sardegna','Toscana','Como'];
+let scanSelectedCities = new Set(ALL_CITIES);
+let scanSelectedPlatforms = new Set(['airbnb','booking']);
+let lastScanCities = []; // cities from last completed scan
+let lastScanPlatforms = []; // platforms from last completed scan
+
+function openScanModal() {
+  const picker = document.getElementById('cityPicker');
+  picker.innerHTML = ALL_CITIES.map(city => {
+    const sel = scanSelectedCities.has(city);
+    return `<div class="city-pick ${sel?'selected':''}" onclick="toggleScanCity('${city}',this)">
+      <input type="checkbox" ${sel?'checked':''} data-city="${city}" onclick="event.stopPropagation();" onchange="toggleScanCity('${city}',this.parentElement)">
+      <div>
+        <div class="city-pick-name">${city}</div>
+        <div class="city-pick-region">${CITY_REGIONS[city]||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+  // Reset platform checkboxes
+  document.querySelectorAll('[data-plat]').forEach(cb => {
+    const plat = cb.dataset.plat;
+    cb.checked = scanSelectedPlatforms.has(plat);
+    cb.parentElement.classList.toggle('selected', scanSelectedPlatforms.has(plat));
+  });
+  document.getElementById('scanOverlay').classList.add('open');
+}
+
+function closeScanModal() {
+  document.getElementById('scanOverlay').classList.remove('open');
+}
+
+function toggleScanCity(city, el) {
+  const cb = el.querySelector('input[data-city]');
+  if (scanSelectedCities.has(city)) {
+    scanSelectedCities.delete(city);
+    el.classList.remove('selected');
+    cb.checked = false;
+  } else {
+    scanSelectedCities.add(city);
+    el.classList.add('selected');
+    cb.checked = true;
+  }
+}
+
+function toggleScanPlat(plat, el) {
+  const cb = el.querySelector('input[data-plat]');
+  if (scanSelectedPlatforms.has(plat)) {
+    scanSelectedPlatforms.delete(plat);
+    el.classList.remove('selected');
+    cb.checked = false;
+  } else {
+    scanSelectedPlatforms.add(plat);
+    el.classList.add('selected');
+    cb.checked = true;
+  }
+}
+
+function scanSelectAll(selectAll) {
+  if (selectAll) {
+    scanSelectedCities = new Set(ALL_CITIES);
+  } else {
+    scanSelectedCities.clear();
+  }
+  document.querySelectorAll('.city-pick[onclick*="toggleScanCity"]').forEach(el => {
+    const cb = el.querySelector('input[data-city]');
+    if (!cb) return;
+    const city = cb.dataset.city;
+    el.classList.toggle('selected', scanSelectedCities.has(city));
+    cb.checked = scanSelectedCities.has(city);
+  });
+}
+
+async function startScanWithCities() {
+  if (scanSelectedCities.size === 0) {
+    showNotif(t('scan_no_cities'));
+    return;
+  }
+  if (scanSelectedPlatforms.size === 0) {
+    showNotif(t('scan_no_cities'));
+    return;
+  }
+  closeScanModal();
+  await runScan([...scanSelectedCities], [...scanSelectedPlatforms]);
+}
+
+async function runScan(cities, platforms){
+  const btn=document.getElementById('scanBtn');
+  const lbl=document.getElementById('scanLbl');
+  const bar=document.getElementById('pgBar');
+  btn.disabled=true; btn.classList.add('loading'); lbl.textContent=t('scanning');
+  let w=0;
+  const iv=setInterval(()=>{w=Math.min(w+Math.random()*3,92);bar.style.width=w+'%';},500);
+
+  const body = { lang: lang };
+  if (cities) body.cities = cities;
+  if (platforms) body.platforms = platforms;
+  const res = await api('/scan', { method: 'POST', body });
+  if (!res) {
+    clearInterval(iv); bar.style.width='0';
+    btn.disabled=false; btn.classList.remove('loading'); lbl.textContent=t('scan_btn');
+    return;
+  }
+
+  const poll = setInterval(async ()=>{
+    const status = await api('/scan/status');
+    if (status && !status.running) {
+      clearInterval(poll); clearInterval(iv);
+      bar.style.width='100%';
+      setTimeout(()=>bar.style.width='0',600);
+      btn.disabled=false; btn.classList.remove('loading'); lbl.textContent=t('scan_btn');
+      document.getElementById('lastScan').textContent=t('time_now').toLowerCase();
+      // Track what was scanned
+      lastScanCities = status.cities || cities || ALL_CITIES;
+      lastScanPlatforms = status.platforms || platforms || ['airbnb','booking'];
+      showNotif(t('notif_scan_complete', { n: status.listings_count||0 }));
+      await loadAllData();
+      gotoPage(curPage);
+    }
+  }, 3000);
+}
+
+async function toggleAuto(el){
+  autoMode=el.checked;
+  const st=document.getElementById('autoStat');
+  if(autoMode){st.className='auto-status on';st.textContent=t('auto_on');showNotif(t('notif_auto_on'));}
+  else{st.className='auto-status';st.textContent=t('auto_off');showNotif(t('notif_auto_off'));}
+  await api('/settings', { method: 'PUT', body: { auto_mode: autoMode } });
+}
+
+function onSearch(v){searchQ=v;propPage=1;document.getElementById('content').innerHTML=renderProps();}
+function setTab(t){curTab=t;propPage=1;document.getElementById('content').innerHTML=renderProps();}
+function goPg(p){propPage=p;document.getElementById('content').innerHTML=renderProps();}
+
+function openModal(id){
+  selProp=PROPS.find(p=>p.id===id);
+  if(!selProp)return;
+  document.getElementById('mProp').textContent=selProp.name;
+  document.getElementById('mCity').textContent=selProp.city+' · '+selProp.region;
+  document.getElementById('mCur').textContent='€'+selProp.cur+'/'+t('per_night').replace('/','');
+  document.getElementById('mMkt').textContent='€'+selProp.mkt+'/'+t('per_night').replace('/','');
+  document.getElementById('mSug').textContent='€'+selProp.sug+'/'+t('per_night').replace('/','');
+  document.getElementById('mOver').value='';
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('open');selProp=null;}
+
+async function confirmApply(){
+  if(!selProp)return;
+  const ov=document.getElementById('mOver').value;
+  const fp=ov?parseInt(ov):selProp.sug;
+  const propId=selProp.id;
+  const propName=selProp.name;
+
+  const res = await api(`/properties/${propId}/apply`, { method: 'POST', body: { price_override: ov ? fp : null } });
+  if (!res) return;
+
+  selProp.cur=fp; selProp.status='applied';
+  closeModal();
+  showNotif(t('notif_updated', { name: propName, price: fp }));
+  document.getElementById('pendBadge').textContent=PROPS.filter(p=>p.status==='pending').length;
+  if(curPage==='properties')document.getElementById('content').innerHTML=renderProps();
+  else if(curPage==='dashboard')gotoPage('dashboard');
+}
+
+async function skipProp(id){
+  const p=PROPS.find(x=>x.id===id);
+  if(!p)return;
+  const res = await api(`/properties/${id}/skip`, { method: 'POST' });
+  if (!res) return;
+  p.status='skip';
+  showNotif(t('notif_skipped', { name: p.name }));
+  document.getElementById('pendBadge').textContent=PROPS.filter(p=>p.status==='pending').length;
+  document.getElementById('content').innerHTML=renderProps();
+}
+
+async function bulkAll(){
+  const res = await api('/properties/bulk-apply', { method: 'POST' });
+  if (!res) return;
+  PROPS.filter(p=>p.status==='pending').forEach(p=>{p.cur=p.sug;p.status='applied';});
+  showNotif(t('notif_bulk_applied', { n: res.applied_count }));
+  document.getElementById('pendBadge').textContent=0;
+  document.getElementById('content').innerHTML=renderProps();
+}
+
+async function bulkSkip(){
+  const res = await api('/properties/bulk-skip', { method: 'POST' });
+  if (!res) return;
+  PROPS.filter(p=>p.status==='pending').forEach(p=>p.status='skip');
+  document.getElementById('pendBadge').textContent=0;
+  document.getElementById('content').innerHTML=renderProps();
+}
+
+function showNotif(msg){
+  const el=document.getElementById('notif');
+  document.getElementById('notifTxt').textContent=msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3500);
+}
+
+document.getElementById('overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.getElementById('scanOverlay').addEventListener('click',function(e){if(e.target===this)closeScanModal();});
+
+// INIT — load saved language, then data, then render
+(async function init(){
+  const savedLang = localStorage.getItem('priceiq_lang');
+  if (savedLang && LANG[savedLang]) {
+    lang = savedLang;
+    document.getElementById('langEN').className = lang === 'en' ? 'lang-btn active' : 'lang-btn';
+    document.getElementById('langIT').className = lang === 'it' ? 'lang-btn active' : 'lang-btn';
+    document.documentElement.lang = lang === 'it' ? 'it' : 'en';
+  }
+  updateStaticUI();
+  await loadAllData();
+  gotoPage('dashboard');
+})();
+</script>
+</body>
+</html>
