@@ -387,9 +387,17 @@ async def run_scan(cities: list[str] = None, platforms: list[str] = None, lang: 
 
 # ── Serve Frontend ──
 
+import os
+
+# Resolve frontend path: works both locally (../index.html) and in Docker (/app/index.html)
+_FRONTEND_PATH = os.path.join(os.path.dirname(__file__), "..", "index.html")
+if not os.path.exists(_FRONTEND_PATH):
+    _FRONTEND_PATH = "/app/index.html"
+
+
 @app.get("/")
 async def serve_frontend():
-    return FileResponse("../index.html")
+    return FileResponse(_FRONTEND_PATH)
 
 
 if __name__ == "__main__":

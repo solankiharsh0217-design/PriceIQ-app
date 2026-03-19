@@ -1,0 +1,20 @@
+# Dependencies and build artifacts
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+*.pyc
+__pycache__/
+
+# Environment files (secrets set via Render dashboard)
+backend/.env
+
+# Git and IDE
+.git/
+.gitignore
+.claude/
+.vscode/
+*.md
+
+# OS files
+.DS_Store
+Thumbs.db
